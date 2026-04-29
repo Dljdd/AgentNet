@@ -1,0 +1,1 @@
+{ "name": "@agentnet/contracts", "version": "0.1.0", "private": true, "scripts": { "build": "hardhat compile", "test": "hardhat test", "deploy": "hardhat run scripts/deploy.ts --network 0g-testnet", "typecheck": "tsc --noEmit" }, "devDependencies": { "hardhat": "^2.22.0", "@nomicfoundation/hardhat-toolbox": "^5.0.0", "@openzeppelin/contracts": "^5.0.0" } }

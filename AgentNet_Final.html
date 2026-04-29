@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AgentNet — Final Project Concept</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap');
+
+  :root {
+    --bg: #080a0f;
+    --surface: #0e1117;
+    --surface2: #141820;
+    --border: #1e2330;
+    --border-bright: #2a3040;
+    --text: #e8ecf4;
+    --muted: #5a6380;
+    --muted2: #8a95b0;
+
+    --indigo: #6366f1;
+    --indigo-dim: rgba(99,102,241,0.12);
+    --indigo-glow: rgba(99,102,241,0.25);
+    --green: #10b981;
+    --green-dim: rgba(16,185,129,0.12);
+    --amber: #f59e0b;
+    --amber-dim: rgba(245,158,11,0.12);
+    --pink: #ec4899;
+    --pink-dim: rgba(236,72,153,0.12);
+    --cyan: #06b6d4;
+    --cyan-dim: rgba(6,182,212,0.12);
+    --red: #ef4444;
+
+    --ens: #5298ff;
+    --ens-dim: rgba(82,152,255,0.12);
+    --uni: #ff007a;
+    --uni-dim: rgba(255,0,122,0.12);
+    --0g: #a78bfa;
+    --0g-dim: rgba(167,139,250,0.12);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 48px 48px;
+    opacity: 0.35;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .wrap {
+    position: relative;
+    z-index: 1;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 48px 24px 64px;
+  }
+
+  /* ── HEADER ── */
+  .header { margin-bottom: 40px; animation: fadeUp 0.6s ease both; }
+
+  .eyebrow {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .eyebrow::before {
+    content: '';
+    display: block;
+    width: 20px;
+    height: 1px;
+    background: var(--indigo);
+  }
+
+  h1 {
+    font-size: clamp(28px, 5vw, 42px);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    margin-bottom: 10px;
+    background: linear-gradient(135deg, var(--text) 40%, var(--muted2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .tagline {
+    font-size: 14px;
+    color: var(--muted2);
+    line-height: 1.6;
+    max-width: 620px;
+    font-weight: 400;
+  }
+
+  /* ── SHARED BLOCKS ── */
+  .section-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 14px;
+    margin-top: 36px;
+  }
+
+  .concept-block {
+    border: 1px solid var(--border-bright);
+    border-radius: 14px;
+    padding: 24px;
+    margin-bottom: 28px;
+    background: linear-gradient(135deg, rgba(99,102,241,0.06), rgba(236,72,153,0.06));
+    position: relative;
+    overflow: hidden;
+    animation: fadeUp 0.6s 0.1s ease both;
+  }
+  .concept-block::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--indigo), var(--pink), transparent);
+  }
+
+  .concept-title { font-size: 17px; font-weight: 700; margin-bottom: 10px; letter-spacing: -0.01em; }
+  .concept-body { font-size: 13px; color: var(--muted2); line-height: 1.7; }
+
+  .highlight { color: var(--text); font-weight: 600; }
+
+  /* ── CARDS ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    position: relative;
+    transition: border-color 0.2s, transform 0.2s;
+  }
+  .card:hover { border-color: var(--border-bright); transform: translateY(-2px); }
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 16px; right: 16px;
+    height: 2px;
+    border-radius: 0 0 2px 2px;
+  }
+
+  .card.indigo::before { background: var(--indigo); }
+  .card.green::before  { background: var(--green); }
+  .card.amber::before  { background: var(--amber); }
+  .card.pink::before   { background: var(--pink); }
+  .card.ens::before    { background: var(--ens); }
+  .card.cyan::before   { background: var(--cyan); }
+
+  .card-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .card-label.indigo { color: var(--indigo); }
+  .card-label.green  { color: var(--green); }
+  .card-label.amber  { color: var(--amber); }
+  .card-label.pink   { color: var(--pink); }
+  .card-label.ens    { color: var(--ens); }
+  .card-label.cyan   { color: var(--cyan); }
+
+  .card-body { font-size: 12px; color: var(--muted2); line-height: 1.6; }
+
+  code {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+  }
+
+  /* ── GRIDS ── */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+  .full-span { grid-column: 1 / -1; }
+
+  /* ── CHIPS & BADGES ── */
+  .chip {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 5px;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+  }
+  .chip.green  { background: var(--green-dim);  color: var(--green);  border: 1px solid rgba(16,185,129,0.25); }
+  .chip.amber  { background: var(--amber-dim);  color: var(--amber);  border: 1px solid rgba(245,158,11,0.25); }
+  .chip.red    { background: rgba(239,68,68,0.12); color: var(--red); border: 1px solid rgba(239,68,68,0.25); }
+  .chip.ens    { background: var(--ens-dim);    color: var(--ens);    border: 1px solid rgba(82,152,255,0.25); }
+  .chip.plain  { background: var(--surface2);   color: var(--muted2); border: 1px solid var(--border); }
+  .chip.indigo { background: var(--indigo-dim); color: var(--indigo); border: 1px solid rgba(99,102,241,0.25); }
+  .chip.pink   { background: var(--pink-dim);   color: var(--pink);   border: 1px solid rgba(236,72,153,0.25); }
+  .chip.cyan   { background: var(--cyan-dim);   color: var(--cyan);   border: 1px solid rgba(6,182,212,0.25); }
+
+  .ens-badge {
+    display: inline-block;
+    background: var(--ens-dim);
+    border: 1px solid rgba(82,152,255,0.25);
+    color: var(--ens);
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.08em;
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-top: 8px;
+  }
+
+  /* ── ENS BLOCK ── */
+  .ens-block {
+    background: var(--surface);
+    border: 1px solid rgba(82,152,255,0.2);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 10px;
+    position: relative;
+    overflow: hidden;
+  }
+  .ens-block::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--ens), transparent);
+  }
+  .ens-block-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ens);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .ens-item {
+    background: var(--ens-dim);
+    border: 1px solid rgba(82,152,255,0.15);
+    border-radius: 8px;
+    padding: 10px 12px;
+  }
+  .ens-item-title {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--ens);
+    margin-bottom: 4px;
+    letter-spacing: 0.05em;
+  }
+  .ens-item-body { font-size: 11px; color: var(--muted2); line-height: 1.5; }
+
+  /* ── FLOW ── */
+  .flow-block {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 10px;
+  }
+  .flow-steps {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    line-height: 1.5;
+  }
+  .flow-arrow { color: var(--muted); font-size: 14px; }
+  .flow-note {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 12px;
+    font-style: italic;
+    border-top: 1px solid var(--border);
+    padding-top: 10px;
+    line-height: 1.6;
+  }
+
+  /* ── PRIZE CARDS ── */
+  .prize-card {
+    border-radius: 12px;
+    padding: 14px;
+    border: 1px solid;
+  }
+  .prize-card.og    { background: var(--0g-dim);  border-color: rgba(167,139,250,0.25); }
+  .prize-card.uni   { background: var(--uni-dim); border-color: rgba(255,0,122,0.25); }
+  .prize-card.ens-p { background: var(--ens-dim); border-color: rgba(82,152,255,0.25); }
+
+  .prize-sponsor {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    margin-bottom: 8px;
+  }
+  .prize-card.og    .prize-sponsor { color: var(--0g); }
+  .prize-card.uni   .prize-sponsor { color: var(--uni); }
+  .prize-card.ens-p .prize-sponsor { color: var(--ens); }
+
+  .prize-items { font-size: 11px; color: var(--muted2); line-height: 1.8; }
+
+  /* ── TOTAL ROW ── */
+  .total-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--surface2);
+    border: 1px solid var(--border-bright);
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin-bottom: 10px;
+  }
+  .total-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+  }
+  .total-amount {
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--text);
+  }
+
+  /* ── SPRINT TABLE ── */
+  .sprint-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin-bottom: 10px;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .sprint-table th {
+    background: var(--surface2);
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    text-transform: uppercase;
+    padding: 10px 14px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+  .sprint-table td {
+    background: var(--surface);
+    padding: 12px 14px;
+    font-size: 12px;
+    color: var(--muted2);
+    line-height: 1.5;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  .sprint-table tr:last-child td { border-bottom: none; }
+  .sprint-table .day-col {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--text);
+    white-space: nowrap;
+    width: 90px;
+  }
+  .sprint-table .owner-col {
+    font-size: 11px;
+    white-space: nowrap;
+    width: 100px;
+  }
+  .sprint-table .milestone {
+    background: var(--surface2);
+  }
+  .sprint-table .milestone td {
+    background: var(--surface2);
+    color: var(--text);
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 0.02em;
+  }
+
+  /* ── PITCH LINE ── */
+  .pitch-line {
+    background: var(--indigo-dim);
+    border: 1px solid var(--indigo-glow);
+    border-radius: 10px;
+    padding: 18px 20px;
+    text-align: center;
+  }
+  .pitch-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    color: var(--muted);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+  }
+  .pitch-text {
+    font-size: 14px;
+    color: var(--muted2);
+    line-height: 1.6;
+    font-style: italic;
+  }
+
+  /* ── DEMO SCRIPT ── */
+  .demo-step {
+    display: flex;
+    gap: 14px;
+    margin-bottom: 14px;
+  }
+  .demo-num {
+    font-family: 'Space Mono', monospace;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--indigo);
+    opacity: 0.4;
+    min-width: 32px;
+    text-align: right;
+    line-height: 1.3;
+  }
+  .demo-content { flex: 1; }
+  .demo-title { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 3px; }
+  .demo-desc { font-size: 12px; color: var(--muted2); line-height: 1.5; }
+  .demo-visual {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    margin-top: 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .demo-visual::before {
+    content: '▸';
+    color: var(--indigo);
+  }
+
+  /* ── RISK TABLE ── */
+  .risk-item {
+    display: flex;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .risk-item:last-child { border-bottom: none; }
+  .risk-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--amber);
+    min-width: 120px;
+  }
+  .risk-mitigation { font-size: 12px; color: var(--muted2); line-height: 1.5; }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .fade-1 { animation: fadeUp 0.6s 0.05s ease both; }
+  .fade-2 { animation: fadeUp 0.6s 0.1s ease both; }
+  .fade-3 { animation: fadeUp 0.6s 0.15s ease both; }
+  .fade-4 { animation: fadeUp 0.6s 0.2s ease both; }
+  .fade-5 { animation: fadeUp 0.6s 0.25s ease both; }
+  .fade-6 { animation: fadeUp 0.6s 0.3s ease both; }
+  .fade-7 { animation: fadeUp 0.6s 0.35s ease both; }
+  .fade-8 { animation: fadeUp 0.6s 0.4s ease both; }
+
+  @media (max-width: 600px) {
+    .grid-2, .grid-3 { grid-template-columns: 1fr; }
+    .flow-steps { flex-direction: column; align-items: flex-start; }
+    .total-row { flex-direction: column; gap: 8px; text-align: center; }
+    .total-row > div { text-align: center !important; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- HEADER                                      -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div class="header">
+    <div class="eyebrow">ETHGlobal OpenAgents — Final Project Concept</div>
+    <h1>AgentNet</h1>
+    <p class="tagline">A decentralized swarm of AI agents that collaboratively build trust scores for on-chain agents — each with an ENS identity, powered by 0G infrastructure, and enforced by a Uniswap v4 hook that makes DeFi safer for everyone.</p>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- CORE CONCEPT                                -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div class="concept-block">
+    <div class="concept-title">From Explorer to Living Protocol</div>
+    <div class="concept-body">
+      The explorer is a window into an agentic system, not the system itself. A swarm of 3 specialized AI agents — with no central coordinator — continuously indexes on-chain agent activity, scores reputation using LLM-powered analysis on 0G Compute, and serves trust scores on-chain via an oracle. Every agent has a persistent ENS identity. A Uniswap v4 hook consumes these scores to gate DeFi access by reputation — making reliable agents cheaper to operate and bad actors expensive.
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- THE AGENT SWARM (MVP: 3 CORE AGENTS)        -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div class="section-label">// The Agent Swarm — 3 core types, no coordinator</div>
+  <div class="grid-2 fade-2">
+
+    <div class="card indigo">
+      <div class="card-label indigo">🔍 INDEXER AGENT</div>
+      <div class="card-body">Crawls on-chain agent registrations, monitors transactions, tracks Uniswap pool interactions. Publishes structured activity logs to <span class="highlight">0G Storage</span>. Listens for new agent registrations via <span class="highlight">0G DA</span> event stream.</div>
+      <div class="ens-badge">indexer.agentnet.eth</div>
+    </div>
+
+    <div class="card green">
+      <div class="card-label green">🧠 SCORER AGENT (LLM-POWERED)</div>
+      <div class="card-body">The AI core. Runs on <span class="highlight">0G Compute</span> — consumes indexed activity, uses an LLM to analyze transaction patterns, and produces both a numeric trust score <em>and</em> a human-readable assessment. Multiple scorer instances can compete; median consensus determines the final score. Writes results to 0G Storage.</div>
+      <div class="ens-badge">scorer-01.agentnet.eth</div>
+    </div>
+
+    <div class="card pink full-span">
+      <div class="card-label pink">🔗 ORACLE AGENT</div>
+      <div class="card-body" style="max-width: 640px;">Reads finalized trust scores from 0G Storage and pushes them on-chain to the Trust Oracle contract. The Uniswap v4 hook and explorer UI both query this oracle. Also monitors for stale scores and triggers re-evaluation by broadcasting to scorer agents via 0G DA.</div>
+      <div class="ens-badge">oracle.agentnet.eth</div>
+    </div>
+  </div>
+
+  <!-- Stretch goal agents -->
+  <div style="background: var(--surface); border: 1px dashed var(--border-bright); border-radius: 10px; padding: 14px; margin-bottom: 10px;">
+    <div style="font-family: 'Space Mono', monospace; font-size: 10px; color: var(--muted); letter-spacing: 0.1em; margin-bottom: 6px;">STRETCH GOALS (IF TIME PERMITS)</div>
+    <div style="font-size: 12px; color: var(--muted2); line-height: 1.6;">
+      <span class="chip amber" style="margin-right: 4px;">WATCHDOG</span> Monitors for rug pulls, wash trading, sybil attacks. Broadcasts signed warnings via 0G DA.
+      &nbsp;&nbsp;
+      <span class="chip cyan" style="margin-right: 4px;">ROUTER</span> Helps agents discover trustworthy collaborators for specific tasks (e.g. "find me a reliable price oracle agent").
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- THE AI ANGLE — WHY THIS IS ACTUALLY AI      -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div class="section-label">// The AI Angle — What Makes This Genuinely Intelligent</div>
+  <div class="card full-span fade-3" style="border-color: var(--border-bright); margin-bottom: 10px;">
+    <div class="card-label green">🧠 LLM-POWERED TRUST ANALYSIS</div>
+    <div class="card-body" style="max-width: 640px; line-height: 1.7;">
+      The Scorer Agent doesn't just compute a weighted average — it uses an LLM running on 0G Compute to produce <span class="highlight">natural-language trust assessments</span>. When a user clicks a trust score in the explorer, they see something like:
+    </div>
+    <div style="background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 14px; margin-top: 12px; font-family: 'Space Mono', monospace; font-size: 11px; color: var(--muted2); line-height: 1.8;">
+      <div style="color: var(--green); font-weight: 700; margin-bottom: 4px;">Trust Score: 84/100 — HIGH</div>
+      "This agent has executed 47 successful swaps across 12 Uniswap pools with consistently low slippage (&lt;0.3%). Transaction patterns show diversified counterparties with no wash-trading indicators. The agent has been active for 18 days with a 98% success rate. No watchdog flags. Recommended for standard DeFi interactions."
+      <div style="color: var(--muted); margin-top: 6px; font-size: 10px;">— scorer-01.agentnet.eth via 0G Compute · 2 min ago</div>
+    </div>
+    <div style="font-size: 11px; color: var(--muted); margin-top: 10px; line-height: 1.5;">
+      This is the moment judges go "okay, this is actually AI." The reasoning is stored on 0G Storage alongside the numeric score, making it auditable and transparent.
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- ENS IDENTITY LAYER                          -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div class="section-label">// ENS — Agent Identity Infrastructure</div>
+  <div class="card ens full-span fade-4" style="margin-bottom: 10px;">
+    <div class="card-label ens">🪪 EVERY AGENT GETS A NAME UNDER agentnet.eth</div>
+    <div class="card-body" style="max-width: 640px;">Each agent in the network is assigned a subname under <code style="color: var(--ens);">agentnet.eth</code>. The ENS record stores the agent's role, trust tier, operator address, 0G Storage key, and capabilities manifest. Discovery, coordination, and the explorer UI all resolve through ENS — not raw addresses.</div>
+  </div>
+
+  <div class="ens-block fade-4">
+    <div class="ens-block-title">How ENS Is Used (4 integration points)</div>
+    <div class="grid-2" style="margin-bottom: 0;">
+      <div class="ens-item">
+        <div class="ens-item-title">AGENT DISCOVERY</div>
+        <div class="ens-item-body">Agents find each other by resolving ENS subnames. No hardcoded addresses. <code style="color: var(--ens);">oracle.agentnet.eth</code> always points to the current oracle, regardless of redeployment.</div>
+      </div>
+      <div class="ens-item">
+        <div class="ens-item-title">METADATA VIA TEXT RECORDS</div>
+        <div class="ens-item-body">ENS text records store agent role, trust tier, 0G Storage key, capabilities manifest, and operator contact. The explorer reads all of this from ENS — no separate database needed.</div>
+      </div>
+      <div class="ens-item">
+        <div class="ens-item-title">ACCESS GATING IN HOOK</div>
+        <div class="ens-item-body">The Uniswap v4 hook checks ENS reverse resolution to confirm the swapping agent has a valid <code style="color: var(--ens);">*.agentnet.eth</code> identity before looking up its trust score.</div>
+      </div>
+      <div class="ens-item">
+        <div class="ens-item-title">HUMAN-READABLE EXPLORER</div>
+        <div class="ens-item-body">The explorer shows <code style="color: var(--ens);">scorer-03.agentnet.eth</code> not <code>0x4a3f...</code>. Users search by name. Trust history is anchored to the ENS identity, not the contract address.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- UNISWAP v4 HOOK                            -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div class="section-label">// Uniswap v4 Trust-Gated Hook — Execution Flow</div>
+  <div class="flow-block fade-5">
+    <div class="flow-steps">
+      <span class="chip plain">Agent wants to swap</span>
+      <span class="flow-arrow">→</span>
+      <span class="chip ens">ENS reverse lookup confirms *.agentnet.eth</span>
+      <span class="flow-arrow">→</span>
+      <span class="chip indigo">beforeSwap hook queries oracle</span>
+      <span class="flow-arrow">→</span>
+      <span class="chip green">80+ → reduced fees</span>
+      <span class="flow-arrow">|</span>
+      <span class="chip amber">40–79 → standard fees</span>
+      <span class="flow-arrow">|</span>
+      <span class="chip red">&lt;40 → higher fees or blocked</span>
+    </div>
+    <div class="flow-note">
+      Real economic incentive: an agent's ENS-anchored on-chain reputation directly affects its DeFi costs. Behave well, pay less. The hook implements <code>beforeSwap</code> to read from the AgentNet Trust Oracle contract and apply a dynamic fee multiplier.
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- 0G INTEGRATION MAP                         -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div class="section-label">// 0G Integration — Full Stack Usage</div>
+  <div class="grid-3 fade-5">
+    <div class="card" style="border-color: rgba(167,139,250,0.3);">
+      <div class="card-label" style="color: var(--0g);">0G STORAGE</div>
+      <div class="card-body">Trust records, LLM assessments, agent activity logs, and historical reputation data. The explorer reads directly from 0G Storage — no centralized DB.</div>
+    </div>
+    <div class="card" style="border-color: rgba(167,139,250,0.3);">
+      <div class="card-label" style="color: var(--0g);">0G COMPUTE</div>
+      <div class="card-body">Scorer agents run LLM inference on 0G's decentralized compute layer. Trust analysis is verifiably decentralized, not running on a personal server.</div>
+    </div>
+    <div class="card" style="border-color: rgba(167,139,250,0.3);">
+      <div class="card-label" style="color: var(--0g);">0G DA</div>
+      <div class="card-body">Agent-to-agent messaging. Indexers announce new data, scorers publish scores, oracle agents broadcast updates. The coordination backbone with no central broker.</div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- EXPLORER UI                                 -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div class="section-label">// The Explorer — Human Window Into the Protocol</div>
+  <div class="card full-span fade-6" style="margin-bottom: 10px;">
+    <div class="card-body" style="line-height: 1.7;">
+      Search by agent ENS name or address → see registration card, full feedback history, trust score with LLM-generated reasoning, network graph of counterparties, reputation-over-time chart, and live activity feed from the swarm. You can see indexer agents crawling, scorer agents publishing, oracle agents pushing to chain. Search <code style="color: var(--ens);">scorer-01.agentnet.eth</code> and get its full identity, history, and current trust tier. <span class="highlight">It's not a static dashboard — it's a live view of a decentralized protocol.</span>
+    </div>
+  </div>
+
+  <!-- MCP Server -->
+  <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px; margin-bottom: 10px;">
+    <div class="card-label indigo">⚡ MCP SERVER — PROGRAMMATIC ACCESS</div>
+    <div class="card-body">Other agents and developers can query AgentNet programmatically via an MCP server. Endpoints: <code style="color: var(--indigo);">getTrustScore(ensName)</code>, <code style="color: var(--indigo);">getAssessment(ensName)</code>, <code style="color: var(--indigo);">getHistory(ensName)</code>, <code style="color: var(--indigo);">getNetworkGraph(ensName)</code>. This makes AgentNet composable — any agent can check another agent's reputation before interacting.</div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- PRIZE ELIGIBILITY                           -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div class="section-label">// Prize Eligibility — 3 Sponsors, Up to 4 Tracks</div>
+  <div class="grid-3 fade-6">
+    <div class="prize-card og">
+      <div class="prize-sponsor">0G LABS</div>
+      <div class="prize-items">
+        ✓ 0G Storage for trust data<br>
+        ✓ 0G Compute for LLM scoring<br>
+        ✓ 0G DA for agent messaging<br>
+        ✓ Developer tooling (MCP server)<br>
+        ✓ Full-stack 0G integration
+      </div>
+    </div>
+    <div class="prize-card uni">
+      <div class="prize-sponsor">UNISWAP</div>
+      <div class="prize-items">
+        ✓ v4 Hook (beforeSwap)<br>
+        ✓ Agent-driven pool interactions<br>
+        ✓ "Reliability &amp; transparency"<br>
+        ✓ Functional code + TxIDs<br>
+        ✓ FEEDBACK.md included
+      </div>
+    </div>
+    <div class="prize-card ens-p">
+      <div class="prize-sponsor">ENS</div>
+      <div class="prize-items">
+        ✓ ENS as agent identity layer<br>
+        ✓ Subnames under agentnet.eth<br>
+        ✓ Text records for metadata<br>
+        ✓ Discovery + access gating<br>
+        ✓ Best ENS integration for AI agents
+      </div>
+    </div>
+  </div>
+
+  <div class="total-row fade-6">
+    <div>
+      <div class="total-label">TARGET PRIZE TRACKS</div>
+      <div style="font-size: 11px; color: var(--muted2); margin-top: 2px;">3 sponsors selected (max allowed)</div>
+    </div>
+    <div style="text-align: right;">
+      <div class="total-amount">0G + Uniswap + ENS</div>
+      <div style="font-size: 11px; color: var(--muted2);">Eligible for multiple sub-tracks per sponsor</div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- BOOTSTRAPPING STRATEGY                      -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div class="section-label">// Bootstrapping — Solving the Cold Start</div>
+  <div class="card full-span fade-7" style="margin-bottom: 10px;">
+    <div class="card-label amber">🌱 SEEDED AGENT ECOSYSTEM</div>
+    <div class="card-body" style="line-height: 1.7;">
+      Deploy <span class="highlight">15–20 mock agents</span> on testnet with real Uniswap transaction histories before demo day. Include a mix of profiles: reliable traders (high scores), erratic agents (medium), and a known bad actor (low score / flagged). This gives the swarm real data to index and score.
+      <br><br>
+      During the live demo, register a <span class="highlight">brand-new agent</span> and show it getting indexed → scored → assessed in real-time. The new agent starts with no history and earns its score through on-chain actions. This breaks the chicken-and-egg problem — the ecosystem is alive, and the new agent enters a world that already has reputation data.
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- DEMO SCRIPT                                 -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div class="section-label">// Demo Script — 3 Minutes, Judges Remember This</div>
+  <div class="card full-span fade-7" style="margin-bottom: 10px; padding: 20px;">
+
+    <div class="demo-step">
+      <div class="demo-num">01</div>
+      <div class="demo-content">
+        <div class="demo-title">Open with the swarm, not the UI</div>
+        <div class="demo-desc">Show a split terminal: agents starting up, resolving each other via ENS, connecting through 0G DA. "These 3 agents have never met — they discover each other by name."</div>
+        <div class="demo-visual">Terminal view — agents booting, ENS resolution logs, 0G DA handshake</div>
+      </div>
+    </div>
+
+    <div class="demo-step">
+      <div class="demo-num">02</div>
+      <div class="demo-content">
+        <div class="demo-title">Register a new agent live</div>
+        <div class="demo-desc">Deploy a fresh agent contract, assign it <code style="color: var(--ens);">demo-agent.agentnet.eth</code>. Show the indexer picking it up automatically from the 0G DA event stream within seconds.</div>
+        <div class="demo-visual">ENS registration → Indexer log "new agent detected" → Activity begins populating</div>
+      </div>
+    </div>
+
+    <div class="demo-step">
+      <div class="demo-num">03</div>
+      <div class="demo-content">
+        <div class="demo-title">Execute swaps, build history</div>
+        <div class="demo-desc">Have the new agent execute 3–4 Uniswap swaps on testnet. Show the indexer logging each transaction to 0G Storage in real-time.</div>
+        <div class="demo-visual">Uniswap swap TxIDs appearing → 0G Storage writes confirmed</div>
+      </div>
+    </div>
+
+    <div class="demo-step">
+      <div class="demo-num">04</div>
+      <div class="demo-content">
+        <div class="demo-title">Scorer produces an LLM assessment</div>
+        <div class="demo-desc">The scorer agent wakes up, pulls indexed data from 0G Storage, runs LLM inference on 0G Compute, and publishes both a score and a written analysis. Show the reasoning in real-time.</div>
+        <div class="demo-visual">Scorer log → "Analyzing 4 transactions..." → Score: 62 + written assessment appears</div>
+      </div>
+    </div>
+
+    <div class="demo-step">
+      <div class="demo-num">05</div>
+      <div class="demo-content">
+        <div class="demo-title">Trust-gated swap on Uniswap</div>
+        <div class="demo-desc">The agent tries another swap — but now the v4 hook checks its trust score. Score 62 = standard fees. Then show a high-trust seeded agent (score 90) getting reduced fees on the same pool. Side-by-side comparison.</div>
+        <div class="demo-visual">Hook log → "Trust: 62 → standard fee" vs "Trust: 90 → reduced fee" — same pool, different cost</div>
+      </div>
+    </div>
+
+    <div class="demo-step">
+      <div class="demo-num">06</div>
+      <div class="demo-content">
+        <div class="demo-title">Flip to the explorer</div>
+        <div class="demo-desc">Open the explorer UI. Search <code style="color: var(--ens);">demo-agent.agentnet.eth</code>. Everything from the last 2 minutes is there — registration card, transaction history, trust score, LLM assessment, counterparty graph. "This is what humans see. The agents built all of this."</div>
+        <div class="demo-visual">Explorer UI — full agent profile, live data, ENS-resolved identity</div>
+      </div>
+    </div>
+
+    <div style="border-top: 1px solid var(--border); padding-top: 12px; margin-top: 8px;">
+      <div style="font-size: 11px; color: var(--muted); font-style: italic; line-height: 1.6;">
+        Key principle: <span class="highlight">lead with the agents, end with the UI</span>. The explorer is the payoff, not the opener. Judges should feel the swarm working before they see the dashboard.
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- SPRINT PLAN                                 -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div class="section-label">// Sprint Plan — 12 Days, 5 People</div>
+
+  <table class="sprint-table fade-8">
+    <thead>
+      <tr>
+        <th>Day</th>
+        <th>Owner(s)</th>
+        <th>Deliverables</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Phase 1 -->
+      <tr class="milestone"><td colspan="3">▎ PHASE 1 — FOUNDATION (Days 1–3)</td></tr>
+      <tr>
+        <td class="day-col">Day 1</td>
+        <td class="owner-col"><span class="chip indigo">ALL</span></td>
+        <td>Architecture alignment. Set up monorepo, CI, testnet wallets. Register <code style="color: var(--ens);">agentnet.eth</code> on testnet. Deploy skeleton contracts (Agent Registry, Trust Oracle). Each person sets up their dev environment with 0G SDK.</td>
+      </tr>
+      <tr>
+        <td class="day-col">Day 2</td>
+        <td class="owner-col"><span class="chip green">P1-P2</span> <span class="chip pink">P3</span></td>
+        <td><strong>P1-P2:</strong> Indexer agent — reads on-chain events, writes structured logs to 0G Storage. Connect to 0G DA for event streaming.<br><strong>P3:</strong> Smart contracts — Agent Registry with ENS subname assignment, Trust Oracle with score storage + read interface.</td>
+      </tr>
+      <tr>
+        <td class="day-col">Day 3</td>
+        <td class="owner-col"><span class="chip green">P1-P2</span> <span class="chip amber">P4</span></td>
+        <td><strong>P1-P2:</strong> Scorer agent — reads from 0G Storage, calls LLM on 0G Compute, writes score + assessment back. Implement median consensus for multiple scorers.<br><strong>P4:</strong> Explorer scaffold — Next.js app, ENS resolution, agent search, basic profile page reading from 0G Storage.</td>
+      </tr>
+
+      <!-- Phase 2 -->
+      <tr class="milestone"><td colspan="3">▎ PHASE 2 — CORE LOOP (Days 4–7)</td></tr>
+      <tr>
+        <td class="day-col">Day 4</td>
+        <td class="owner-col"><span class="chip green">P1</span> <span class="chip pink">P3</span></td>
+        <td><strong>P1:</strong> Oracle agent — reads scores from 0G Storage, pushes to on-chain Trust Oracle contract. Monitors for stale scores, triggers re-evaluation via 0G DA.<br><strong>P3:</strong> Uniswap v4 hook — <code>beforeSwap</code> that reads Trust Oracle, applies fee multiplier based on score tier.</td>
+      </tr>
+      <tr>
+        <td class="day-col">Day 5</td>
+        <td class="owner-col"><span class="chip green">P2</span> <span class="chip amber">P4</span></td>
+        <td><strong>P2:</strong> ENS integration depth — text records for all agent metadata, reverse resolution in hook, subname registration flow.<br><strong>P4:</strong> Explorer — trust score display with LLM assessment, reputation-over-time chart, live activity feed from 0G DA.</td>
+      </tr>
+      <tr>
+        <td class="day-col">Day 6</td>
+        <td class="owner-col"><span class="chip green">P1-P2</span> <span class="chip pink">P3</span></td>
+        <td><strong>P1-P2:</strong> End-to-end integration testing. Full loop: register agent → indexer picks up → scorer assesses → oracle pushes score → hook reads it.<br><strong>P3:</strong> Deploy all contracts to testnet. Get TxIDs for submission. Test hook with real Uniswap v4 pool.</td>
+      </tr>
+      <tr>
+        <td class="day-col">Day 7</td>
+        <td class="owner-col"><span class="chip indigo">ALL</span></td>
+        <td>Seed the testnet ecosystem. Deploy 15-20 mock agents with diverse transaction histories. Run the full swarm against seeded data. Debug and fix integration issues. <strong>Core loop must be working end-to-end by end of Day 7.</strong></td>
+      </tr>
+
+      <!-- Phase 3 -->
+      <tr class="milestone"><td colspan="3">▎ PHASE 3 — POLISH &amp; SHIP (Days 8–12)</td></tr>
+      <tr>
+        <td class="day-col">Day 8–9</td>
+        <td class="owner-col"><span class="chip amber">P4</span> <span class="chip cyan">P5</span></td>
+        <td><strong>P4:</strong> Explorer polish — network graph visualization, responsive design, agent comparison view, search UX.<br><strong>P5:</strong> MCP server — implement all 4 endpoints, test with external queries, write API documentation.</td>
+      </tr>
+      <tr>
+        <td class="day-col">Day 9–10</td>
+        <td class="owner-col"><span class="chip green">P1-P2</span></td>
+        <td>Stretch goals if time allows: Watchdog agent (sybil/wash-trade detection), Router agent (agent discovery recommendations). Otherwise: harden existing agents, add error handling, improve LLM assessment quality.</td>
+      </tr>
+      <tr>
+        <td class="day-col">Day 10–11</td>
+        <td class="owner-col"><span class="chip cyan">P5</span> <span class="chip indigo">ALL</span></td>
+        <td><strong>P5:</strong> Demo script rehearsal. Record demo video (max 3 min). Write README.md + FEEDBACK.md.<br><strong>ALL:</strong> Final integration test. Run the full demo flow 3 times. Fix any issues found.</td>
+      </tr>
+      <tr>
+        <td class="day-col">Day 12</td>
+        <td class="owner-col"><span class="chip indigo">ALL</span></td>
+        <td>Submission day. Final video edit. GitHub repo cleanup. Verify all TxIDs. Submit to ETHGlobal — select 0G, Uniswap, and ENS as partner prizes. Double-check all submission requirements.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- TEAM ALLOCATION                             -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div class="section-label">// Team Allocation</div>
+  <div class="grid-2 fade-8" style="margin-bottom: 10px;">
+    <div class="card">
+      <div class="card-label green">P1-P2 — AGENT BACKEND</div>
+      <div class="card-body">Build 3 agent types, 0G SDK integrations (Storage, Compute, DA), agent-to-agent messaging protocol, LLM scoring logic.</div>
+    </div>
+    <div class="card">
+      <div class="card-label pink">P3 — SMART CONTRACTS</div>
+      <div class="card-body">Agent Registry, Trust Oracle, Uniswap v4 hook, ENS subname registration contract, testnet deployment + TxIDs.</div>
+    </div>
+    <div class="card">
+      <div class="card-label amber">P4 — EXPLORER FRONTEND</div>
+      <div class="card-body">Next.js app — agent search (ENS-resolved), trust profile with LLM assessment, reputation charts, network graph, live agent activity feed.</div>
+    </div>
+    <div class="card">
+      <div class="card-label cyan">P5 — MCP + DEMO + SUBMISSION</div>
+      <div class="card-body">MCP server (4 endpoints), mock agent deployment scripts, demo video recording, README.md, FEEDBACK.md, submission packaging.</div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- RISK MITIGATIONS                            -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div class="section-label">// Known Risks &amp; Mitigations</div>
+  <div class="card full-span fade-8" style="margin-bottom: 10px; padding: 18px;">
+    <div class="risk-item">
+      <div class="risk-label">SCOPE CREEP</div>
+      <div class="risk-mitigation">MVP is exactly 3 agents + 1 hook + 1 explorer + 1 MCP server. Watchdog and Router are stretch goals only. If Day 7 core loop isn't working, all hands on integration — no new features.</div>
+    </div>
+    <div class="risk-item">
+      <div class="risk-label">COLD START</div>
+      <div class="risk-mitigation">15-20 seeded agents on testnet by Day 7. Mix of profiles: reliable, erratic, bad actor. Demo shows a new agent entering an already-alive ecosystem.</div>
+    </div>
+    <div class="risk-item">
+      <div class="risk-label">"WHERE'S THE AI?"</div>
+      <div class="risk-mitigation">The Scorer agent uses a real LLM on 0G Compute. Trust assessments include natural-language reasoning, not just numbers. This is the demo's "wow moment" — show the written analysis appearing in real-time.</div>
+    </div>
+    <div class="risk-item">
+      <div class="risk-label">DASHBOARD FATIGUE</div>
+      <div class="risk-mitigation">Demo opens with the agent swarm in a terminal, not the UI. The explorer is the payoff at minute 2:30, after judges have seen the agents working. Lead with intelligence, end with interface.</div>
+    </div>
+    <div class="risk-item">
+      <div class="risk-label">HOOK COMPLEXITY</div>
+      <div class="risk-mitigation">Keep the hook simple: <code>beforeSwap</code> → read oracle → apply fee multiplier. No complex logic in the hook itself. All intelligence lives in the agents. The hook is a consumer, not a producer.</div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- SUBMISSION CHECKLIST                        -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div class="section-label">// Submission Checklist</div>
+  <div class="card full-span fade-8" style="margin-bottom: 28px;">
+    <div class="card-body" style="line-height: 2;">
+      <span style="color: var(--green);">☐</span> GitHub repo with clean README.md<br>
+      <span style="color: var(--green);">☐</span> Demo video (max 3 minutes)<br>
+      <span style="color: var(--green);">☐</span> Testnet TxIDs (agent registration, swaps, hook execution)<br>
+      <span style="color: var(--green);">☐</span> FEEDBACK.md (required for Uniswap track)<br>
+      <span style="color: var(--green);">☐</span> Live demo link or setup instructions<br>
+      <span style="color: var(--green);">☐</span> Select 3 partner prizes: 0G Labs, Uniswap, ENS<br>
+      <span style="color: var(--green);">☐</span> ENS subnames registered on testnet<br>
+      <span style="color: var(--green);">☐</span> MCP server deployed and documented<br>
+      <span style="color: var(--green);">☐</span> Seeded ecosystem running on testnet
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- TECH STACK                                  -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div class="section-label">// Tech Stack</div>
+  <div class="grid-2 fade-8" style="margin-bottom: 28px;">
+    <div class="card">
+      <div class="card-label" style="color: var(--text);">AGENTS</div>
+      <div class="card-body">TypeScript / Node.js, 0G SDK (Storage, Compute, DA), ethers.js / viem, ENS.js for name resolution, LLM API on 0G Compute</div>
+    </div>
+    <div class="card">
+      <div class="card-label" style="color: var(--text);">CONTRACTS</div>
+      <div class="card-body">Solidity, Foundry for testing + deployment, Uniswap v4 hook template, ENS subname registrar, Trust Oracle</div>
+    </div>
+    <div class="card">
+      <div class="card-label" style="color: var(--text);">EXPLORER</div>
+      <div class="card-body">Next.js 14, Tailwind CSS, D3.js for network graph, Recharts for reputation timelines, ENS.js, wagmi/viem</div>
+    </div>
+    <div class="card">
+      <div class="card-label" style="color: var(--text);">INFRA</div>
+      <div class="card-body">0G testnet (full stack), Ethereum Sepolia (contracts + ENS), Uniswap v4 on Sepolia, Vercel for explorer hosting</div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- PITCH LINE                                  -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div class="pitch-line fade-8">
+    <div class="pitch-label">One-line pitch</div>
+    <div class="pitch-text">"A decentralized swarm of AI agents that collaboratively build trust scores for on-chain agents — each with an ENS identity, powered by 0G infrastructure, and enforced by a Uniswap v4 hook that makes DeFi safer for everyone."</div>
+  </div>
+
+</div>
+</body>
+</html>

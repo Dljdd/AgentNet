@@ -1,0 +1,1 @@
+{ "name": "@agentnet/integrations-uniswap", "version": "0.1.0", "private": true, "main": "./src/index.ts", "types": "./src/index.ts", "dependencies": { "@agentnet/types": "workspace:*", "@agentnet/core": "workspace:*", "viem": "^2.20.0" }, "scripts": { "build": "tsc", "typecheck": "tsc --noEmit", "test": "vitest run" } }
