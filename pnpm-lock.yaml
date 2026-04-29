@@ -59,6 +59,9 @@ importers:
 
   packages/agents/worker:
     dependencies:
+      '@agentnet/config':
+        specifier: workspace:*
+        version: link:../../config
       '@agentnet/core':
         specifier: workspace:*
         version: link:../../core
@@ -74,6 +77,9 @@ importers:
       '@agentnet/types':
         specifier: workspace:*
         version: link:../../types
+      nanoid:
+        specifier: ^5.0.9
+        version: 5.1.9
       viem:
         specifier: ^2.20.0
         version: 2.48.4(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76)
