@@ -70,6 +70,16 @@ export interface ScoreUpdate {
 // Payment types
 // ---------------------------------------------------------------------------
 
+/** A challenge issued by a worker specifying how they want to be paid. */
+export interface PaymentChallenge {
+  challengeId: string;
+  workerAddress: string;
+  amount: bigint;
+  preferredToken: string;
+  taskId: string;
+  expiresAt: number;
+}
+
 /** Parameters for a cross-token payment routed through the payment module. */
 export interface PaymentRequest {
   from: string;
