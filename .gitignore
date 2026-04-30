@@ -37,3 +37,6 @@ coverage/
 # Misc
 *.log
 npm-debug.log*
+
+.claude/
+.claude/*   
