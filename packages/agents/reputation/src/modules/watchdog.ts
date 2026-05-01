@@ -1,1 +1,2 @@
-// Reputation Watchdog — M-21\nexport {}
+// Reputation Watchdog — M-21
+export {}

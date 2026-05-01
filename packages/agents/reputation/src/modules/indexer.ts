@@ -1,1 +1,2 @@
-// Reputation Indexer — M-19\nexport {}
+// Reputation Indexer — M-19
+export {}

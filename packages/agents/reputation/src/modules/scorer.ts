@@ -1,1 +1,2 @@
-// Reputation Scorer — M-20\nexport {}
+// Reputation Scorer — M-20
+export {}

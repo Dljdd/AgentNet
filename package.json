@@ -9,9 +9,9 @@
     "test": "turbo test",
     "typecheck": "turbo typecheck",
     "lint": "turbo lint",
-    "seed": "ts-node scripts/seed.ts",
-    "start": "ts-node scripts/orchestrator.ts",
-    "demo": "ts-node scripts/demo.ts",
+    "seed": "ts-node --esm scripts/seed.ts",
+    "start": "ts-node --esm scripts/orchestrator.ts",
+    "demo": "ts-node --esm scripts/demo.ts",
     "clean": "turbo clean && rm -rf node_modules"
   },
   "devDependencies": {

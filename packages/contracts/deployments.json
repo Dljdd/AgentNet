@@ -1,0 +1,10 @@
+{
+  "network": "0g-testnet",
+  "chainId": 16600,
+  "deployedAt": "2026-05-01T12:35:37.427Z",
+  "deployer": "0xFBEd89164eD414729D180948c05EBa60E56a803d",
+  "contracts": {
+    "ReputationOracle": "0x19139CDE2d0da0B148bE69cD4261AA62B9d4F125",
+    "WorkerRegistry": "0xde94A743D06143b08E4B49E3812D570065BEdC51"
+  }
+}

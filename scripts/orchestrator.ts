@@ -1,1 +1,3 @@
-// Orchestrator — M-31\n// See IMPLEMENTATION_PLAN.md for full spec\nconsole.log("Orchestrator — not yet implemented");
+// Orchestrator — M-31
+// See IMPLEMENTATION_PLAN.md for full spec
+console.log("Orchestrator — not yet implemented");
