@@ -108,8 +108,8 @@ export async function GET(): Promise<Response> {
 
     type ScoreTuple = { composite: bigint; totalJobs: bigint }
     const scores: ScoreTuple[] = scoreResults
-      .filter((r): r is PromiseFulfilledResult<ScoreTuple> => r.status === 'fulfilled')
-      .map((r) => r.value)
+      .filter((r) => r.status === 'fulfilled')
+      .map((r) => (r as PromiseFulfilledResult<ScoreTuple>).value)
 
     const totalTasks = scores.reduce((s, r) => s + Number(r.totalJobs), 0)
     const totalPayments = Math.floor(totalTasks * 0.85)

@@ -18,20 +18,27 @@ type FilterType = 'all' | 'task' | 'payment' | 'score'
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
 function formatAddr(addr: string) {
-  return `${addr.slice(0, 6)}...${addr.slice(-4)}`
+  return `${addr.slice(0, 6)}…${addr.slice(-4)}`
 }
 
 function timeAgo(ts: number) {
   const s = Math.floor((Date.now() - ts) / 1000)
-  if (s < 60) return `${s}s ago`
-  if (s < 3600) return `${Math.floor(s / 60)}m ago`
-  return `${Math.floor(s / 3600)}h ago`
+  if (s < 60) return `${s}s`
+  if (s < 3600) return `${Math.floor(s / 60)}m`
+  return `${Math.floor(s / 3600)}h`
 }
 
-const eventIcons: Record<ActivityEvent['type'], string> = {
-  task: '⚙️',
-  payment: '💰',
-  score: '⭐',
+/* Dot colors per event type */
+const eventDot: Record<ActivityEvent['type'], string> = {
+  task:    '#2DC964',  /* bio-400 */
+  payment: '#F5B041',  /* amber-400 */
+  score:   '#8169D8',  /* lilac-400 */
+}
+
+const eventLabel: Record<ActivityEvent['type'], string> = {
+  task: 'Job',
+  payment: 'Payment',
+  score: 'Score',
 }
 
 interface ActivityFeedProps {
@@ -47,33 +54,44 @@ export default function ActivityFeed({ filter: initialFilter = 'all', maxItems =
   })
 
   const events = Array.isArray(data) ? data : []
-
   const filtered = events
     .filter((e) => activeFilter === 'all' || e.type === activeFilter)
     .slice(0, maxItems)
 
   const filterTabs: { key: FilterType; label: string }[] = [
-    { key: 'all', label: 'All' },
-    { key: 'task', label: 'Tasks' },
-    { key: 'payment', label: 'Payments' },
-    { key: 'score', label: 'Scores' },
+    { key: 'all',     label: 'All' },
+    { key: 'task',    label: 'Jobs' },
+    { key: 'payment', label: 'Pay' },
+    { key: 'score',   label: 'Score' },
   ]
 
   return (
-    <div className="bg-[#111111] border border-[#222222] rounded-xl overflow-hidden">
+    <div
+      className="border overflow-hidden"
+      style={{
+        background: 'var(--surface)',
+        borderColor: 'var(--border)',
+        borderRadius: 'var(--r-lg)',
+      }}
+    >
       {/* Header */}
-      <div className="px-4 py-3 border-b border-[#1a1a1a] flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-gray-300">Activity Feed</h3>
+      <div
+        className="px-4 py-3 border-b flex items-center justify-between"
+        style={{ borderColor: 'var(--border)', background: 'var(--bg-sunk)' }}
+      >
+        <span className="eyebrow">Activity Feed</span>
         <div className="flex gap-1">
           {filterTabs.map((tab) => (
             <button
               key={tab.key}
               onClick={() => setActiveFilter(tab.key)}
-              className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
-                activeFilter === tab.key
-                  ? 'bg-[#333333] text-white'
-                  : 'text-gray-500 hover:text-gray-300'
-              }`}
+              className="font-mono text-[10px] uppercase tracking-[0.06em] transition-all duration-[120ms]"
+              style={{
+                padding: '3px 8px',
+                borderRadius: 'var(--r-xs)',
+                background: activeFilter === tab.key ? 'var(--border-strong)' : 'transparent',
+                color: activeFilter === tab.key ? 'var(--text)' : 'var(--text-subtle)',
+              }}
             >
               {tab.label}
             </button>
@@ -82,67 +100,106 @@ export default function ActivityFeed({ filter: initialFilter = 'all', maxItems =
       </div>
 
       {/* Event list */}
-      <div className="max-h-96 overflow-y-auto">
+      <div className="max-h-[420px] overflow-y-auto divide-y" style={{ borderColor: 'var(--border)' }}>
         {isLoading ? (
-          <div className="space-y-0">
+          <>
             {[1, 2, 3].map((i) => (
-              <div key={i} className="py-3 px-4 border-b border-[#1a1a1a] animate-pulse">
-                <div className="flex items-start gap-3">
-                  <div className="w-6 h-6 bg-[#222222] rounded" />
-                  <div className="flex-1">
-                    <div className="h-3 bg-[#222222] rounded w-3/4 mb-2" />
-                    <div className="h-2.5 bg-[#222222] rounded w-1/2" />
-                  </div>
-                  <div className="h-2.5 bg-[#222222] rounded w-12" />
+              <div
+                key={i}
+                className="py-3 px-4 flex items-start gap-3 animate-pulse"
+              >
+                <div className="w-2 h-2 rounded-full mt-1.5 flex-shrink-0" style={{ background: 'var(--border-strong)' }} />
+                <div className="flex-1">
+                  <div className="h-2.5 rounded w-3/4 mb-2" style={{ background: 'var(--border-strong)' }} />
+                  <div className="h-2 rounded w-1/2" style={{ background: 'var(--border)' }} />
                 </div>
+                <div className="h-2 rounded w-8" style={{ background: 'var(--border)' }} />
               </div>
             ))}
-          </div>
+          </>
         ) : error ? (
-          <div className="py-8 text-center text-gray-500 text-sm">
-            Failed to load activity
+          <div className="py-8 text-center font-sans text-sm" style={{ color: 'var(--text-subtle)' }}>
+            Failed to load activity.
           </div>
         ) : filtered.length === 0 ? (
-          <div className="py-8 text-center text-gray-500 text-sm px-4">
+          <div className="py-10 text-center font-sans text-sm px-4" style={{ color: 'var(--text-subtle)' }}>
             No activity yet. Start the orchestrator to see live events.
           </div>
         ) : (
           filtered.map((event) => (
-            <div key={event.id} className="py-3 px-4 border-b border-[#1a1a1a] last:border-b-0 hover:bg-[#0f0f0f] transition-colors">
-              <div className="flex items-start gap-3">
-                <span className="text-base flex-shrink-0 mt-0.5">{eventIcons[event.type]}</span>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm text-gray-300 leading-snug">{event.summary}</p>
-                  {event.actors.length > 0 && (
-                    <div className="flex flex-wrap gap-x-2 mt-1">
-                      {event.actors.map((actor) => (
-                        <Link
-                          key={actor}
-                          href={`/workers/${actor}`}
-                          className="font-mono text-xs text-blue-400 hover:text-blue-300 transition-colors"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          {formatAddr(actor)}
-                        </Link>
-                      ))}
-                    </div>
-                  )}
-                  {event.txHash && (
-                    <a
-                      href={`https://chainscan-galileo.0g.ai/tx/${event.txHash}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="font-mono text-xs text-gray-500 hover:text-gray-300 transition-colors mt-0.5 inline-block"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      {formatAddr(event.txHash)} ↗
-                    </a>
-                  )}
+            <div
+              key={event.id}
+              className="py-3 px-4 flex items-start gap-3 transition-colors"
+              style={{ background: 'transparent' }}
+              onMouseEnter={(e) => {
+                ;(e.currentTarget as HTMLElement).style.background =
+                  `color-mix(in oklab, var(--accent) 4%, transparent)`
+              }}
+              onMouseLeave={(e) => {
+                ;(e.currentTarget as HTMLElement).style.background = 'transparent'
+              }}
+            >
+              {/* Type dot */}
+              <span
+                className="w-2 h-2 rounded-full flex-shrink-0 mt-1.5"
+                style={{ background: eventDot[event.type] }}
+              />
+
+              <div className="flex-1 min-w-0">
+                {/* Type eyebrow + summary */}
+                <div
+                  className="font-mono text-[9px] uppercase tracking-[0.08em] mb-0.5"
+                  style={{ color: eventDot[event.type] }}
+                >
+                  {eventLabel[event.type]}
                 </div>
-                <span className="text-xs text-gray-600 flex-shrink-0 mt-0.5">
-                  {timeAgo(event.timestamp)}
-                </span>
+                <p className="font-sans text-xs leading-snug" style={{ color: 'var(--text-muted)' }}>
+                  {event.summary}
+                </p>
+
+                {/* Actor links */}
+                {event.actors.length > 0 && (
+                  <div className="flex flex-wrap gap-x-2 mt-1">
+                    {event.actors.map((actor) => (
+                      <Link
+                        key={actor}
+                        href={`/workers/${actor}`}
+                        className="font-mono text-[10px] transition-colors"
+                        style={{ color: 'var(--text-subtle)' }}
+                        onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--accent)')}
+                        onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-subtle)')}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {formatAddr(actor)}
+                      </Link>
+                    ))}
+                  </div>
+                )}
+
+                {/* Tx hash */}
+                {event.txHash && (
+                  <a
+                    href={`https://chainscan-galileo.0g.ai/tx/${event.txHash}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-mono text-[10px] mt-0.5 inline-block transition-colors"
+                    style={{ color: 'var(--text-subtle)', letterSpacing: '-0.01em' }}
+                    onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--text-muted)')}
+                    onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-subtle)')}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {formatAddr(event.txHash)} ↗
+                  </a>
+                )}
               </div>
+
+              {/* Timestamp */}
+              <span
+                className="font-mono text-[10px] flex-shrink-0 mt-0.5"
+                style={{ color: 'var(--text-subtle)' }}
+              >
+                {timeAgo(event.timestamp)}
+              </span>
             </div>
           ))
         )}

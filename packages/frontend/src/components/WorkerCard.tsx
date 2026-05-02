@@ -22,20 +22,8 @@ interface WorkerListItem {
   feePerTask: string
 }
 
-function scoreColor(score: number) {
-  if (score >= 7500) return 'text-green-400'
-  if (score >= 5000) return 'text-yellow-400'
-  return 'text-red-400'
-}
-
-function scoreBg(score: number) {
-  if (score >= 7500) return 'bg-green-400'
-  if (score >= 5000) return 'bg-yellow-400'
-  return 'bg-red-400'
-}
-
 function formatAddr(addr: string) {
-  return `${addr.slice(0, 6)}...${addr.slice(-4)}`
+  return `${addr.slice(0, 6)}…${addr.slice(-4)}`
 }
 
 function timeAgo(ts: number) {
@@ -45,17 +33,25 @@ function timeAgo(ts: number) {
   return `${Math.floor(s / 3600)}h ago`
 }
 
-const capabilityStyles: Record<TaskType, string> = {
-  'pool-indexer': 'bg-blue-500/20 text-blue-400 border border-blue-500/30',
-  'wallet-summarizer': 'bg-purple-500/20 text-purple-400 border border-purple-500/30',
-  'token-fact-checker': 'bg-orange-500/20 text-orange-400 border border-orange-500/30',
+/* Status badge tick colors per design spec */
+const statusConfig: Record<AgentStatus, { tick: string; text: string; label: string; pulse: boolean }> = {
+  idle:    { tick: '#262C39', text: 'var(--text-muted)', label: 'Idle', pulse: false },
+  working: { tick: '#2DC964', text: '#2DC964',           label: 'Live', pulse: true },
+  error:   { tick: '#F26B61', text: '#F26B61',           label: 'Error', pulse: false },
+  offline: { tick: '#262C39', text: 'var(--text-subtle)', label: 'Offline', pulse: false },
 }
 
-const statusColors: Record<AgentStatus, string> = {
-  idle: 'bg-green-400',
-  working: 'bg-green-400',
-  error: 'bg-gray-500',
-  offline: 'bg-gray-500',
+const capabilityStyles: Record<TaskType, { bg: string; text: string; border: string }> = {
+  'pool-indexer':      { bg: 'rgba(45,201,100,0.08)',  text: '#19B254', border: 'rgba(45,201,100,0.2)' },
+  'wallet-summarizer': { bg: 'rgba(129,105,216,0.08)', text: '#8169D8', border: 'rgba(129,105,216,0.2)' },
+  'token-fact-checker':{ bg: 'rgba(245,176,65,0.08)',  text: '#F5B041', border: 'rgba(245,176,65,0.2)' },
+}
+
+/* Score color by threshold */
+function scoreAccentColor(score: number): string {
+  if (score >= 7500) return '#2DC964'   /* bio-400 */
+  if (score >= 5000) return '#F5B041'   /* amber-400 */
+  return '#F26B61'                       /* coral-400 */
 }
 
 interface WorkerCardProps {
@@ -70,68 +66,120 @@ export default function WorkerCard({ worker, onClick }: WorkerCardProps) {
     e.stopPropagation()
     navigator.clipboard.writeText(worker.address).then(() => {
       setCopied(true)
-      setTimeout(() => setCopied(false), 1000)
+      setTimeout(() => setCopied(false), 1200)
     })
   }
 
-  const barWidth = Math.min(100, (worker.score.composite / 10000) * 100)
+  const status = statusConfig[worker.status]
+  const accentColor = scoreAccentColor(worker.score.composite)
+  const scoreStr = (worker.score.composite / 10000).toFixed(3)
+  const [intPart, decPart] = scoreStr.split('.')
 
   return (
     <div
       onClick={onClick}
-      className="bg-[#111111] border border-[#222222] rounded-xl p-5 cursor-pointer hover:border-[#444444] transition-all hover:scale-[1.01]"
+      className="cursor-pointer border transition-all duration-[120ms] ease-[cubic-bezier(0.2,0.8,0.2,1)]"
+      style={{
+        background: 'var(--surface)',
+        borderColor: 'var(--border)',
+        borderRadius: 'var(--r-lg)',
+        padding: '20px',
+      }}
+      onMouseEnter={(e) => {
+        ;(e.currentTarget as HTMLElement).style.borderColor = 'var(--border-strong)'
+        ;(e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)'
+      }}
+      onMouseLeave={(e) => {
+        ;(e.currentTarget as HTMLElement).style.borderColor = 'var(--border)'
+        ;(e.currentTarget as HTMLElement).style.transform = 'translateY(0)'
+      }}
     >
-      {/* Status + Address row */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <span className={`w-2 h-2 rounded-full ${statusColors[worker.status]}`} />
-          <span className="text-xs text-gray-400 capitalize">{worker.status}</span>
+      {/* Top row: Avatar + address + status badge */}
+      <div className="flex items-start justify-between mb-4">
+        <div className="flex items-center gap-3">
+          {/* Avatar */}
+          <div
+            className="w-11 h-11 rounded-full flex-shrink-0"
+            style={{
+              background: 'linear-gradient(135deg, var(--accent), var(--accent-2))',
+            }}
+          />
+          <div>
+            <div className="font-mono text-sm" style={{ color: 'var(--text)', letterSpacing: '-0.01em' }}>
+              {formatAddr(worker.address)}
+            </div>
+            <button
+              onClick={handleCopy}
+              className="font-mono text-[10px] mt-0.5 transition-colors"
+              style={{ color: 'var(--text-subtle)' }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--text-muted)')}
+              onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-subtle)')}
+              title="Copy address"
+            >
+              {copied ? '✓ copied' : '⧉ copy'}
+            </button>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="font-mono text-sm text-gray-300">{formatAddr(worker.address)}</span>
-          <button
-            onClick={handleCopy}
-            className="text-gray-500 hover:text-gray-300 transition-colors text-xs w-5 h-5 flex items-center justify-center"
-            title="Copy address"
-          >
-            {copied ? '✓' : '⧉'}
-          </button>
-        </div>
+
+        {/* Status badge */}
+        <span
+          className="status-badge"
+          style={{
+            color: status.text,
+            borderColor: `${status.tick}40`,
+            background: `${status.tick}10`,
+          }}
+        >
+          <span
+            className={`tick ${status.pulse ? 'pulse-dot' : ''}`}
+            style={{ background: status.tick }}
+          />
+          {status.label}
+        </span>
       </div>
 
-      {/* Composite Score */}
-      <div className="mb-3">
-        <div className="flex items-baseline gap-1 mb-2">
-          <span className={`text-3xl font-bold ${scoreColor(worker.score.composite)}`}>
-            {worker.score.composite.toLocaleString()}
+      {/* Score — display serif, italic accent on significant digits */}
+      <div className="mb-4">
+        <div className="eyebrow mb-2">Reputation Score</div>
+        <div className="font-display leading-none" style={{ fontSize: 28 }}>
+          <em style={{ color: accentColor, fontStyle: 'italic' }}>{intPart}</em>
+          <span style={{ color: 'var(--text-subtle)' }}>.</span>
+          <span style={{ color: 'var(--text-muted)' }}>{decPart}</span>
+          <span className="font-mono text-xs ml-2" style={{ color: 'var(--text-subtle)', fontSize: 11 }}>
+            / 1.000
           </span>
-          <span className="text-sm text-gray-600">/ 10000</span>
-        </div>
-        {/* Score bar */}
-        <div className="w-full bg-[#222222] rounded-full h-1.5">
-          <div
-            className={`h-1.5 rounded-full transition-all ${scoreBg(worker.score.composite)}`}
-            style={{ width: `${barWidth}%` }}
-          />
         </div>
       </div>
 
       {/* Capabilities */}
       <div className="flex flex-wrap gap-1.5 mb-4">
-        {worker.capabilities.map((cap) => (
-          <span
-            key={cap}
-            className={`text-xs px-2 py-0.5 rounded-full font-medium ${capabilityStyles[cap]}`}
-          >
-            {cap}
-          </span>
-        ))}
+        {worker.capabilities.map((cap) => {
+          const s = capabilityStyles[cap]
+          return (
+            <span
+              key={cap}
+              className="font-mono text-[10px] border"
+              style={{
+                background: s.bg,
+                color: s.text,
+                borderColor: s.border,
+                borderRadius: 'var(--r-pill)',
+                padding: '3px 8px',
+              }}
+            >
+              {cap}
+            </span>
+          )
+        })}
       </div>
 
       {/* Footer stats */}
-      <div className="flex items-center justify-between text-xs text-gray-500">
-        <span>{worker.feePerTask} OG / task</span>
-        <span>{worker.score.totalJobs} jobs</span>
+      <div
+        className="flex items-center justify-between font-mono text-[11px] pt-4 border-t"
+        style={{ color: 'var(--text-subtle)', borderColor: 'var(--border)' }}
+      >
+        <span>{worker.feePerTask} OG / job</span>
+        <span>{worker.score.totalJobs.toLocaleString()} jobs</span>
         <span>{timeAgo(worker.score.lastUpdated)}</span>
       </div>
     </div>
