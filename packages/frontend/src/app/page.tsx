@@ -14,6 +14,9 @@ const GridScan = dynamic(
 
 const ShapeGrid = dynamic(() => import('@/components/ShapeGrid'), { ssr: false })
 
+const SplitText = dynamic(() => import('@/components/SplitText'), { ssr: false })
+const Shuffle = dynamic(() => import('@/components/Shuffle'), { ssr: false })
+
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
 interface StatsResponse {
@@ -357,11 +360,26 @@ export default function LandingPage() {
               <div
                 key={kpi.eyebrow}
                 className="p-6 border"
-                style={{ background: 'var(--surface)', borderColor: 'var(--border)', borderRadius: 'var(--r-lg)' }}
+                style={{
+                  background: '#000000',
+                  borderColor: 'rgba(255,255,255,0.1)',
+                  borderRadius: 'var(--r-lg)',
+                  boxShadow: '0 0 0 1px rgba(45,201,100,0.06) inset',
+                }}
               >
                 <div className="eyebrow mb-3" style={{ color: 'var(--text-subtle)' }}>{kpi.eyebrow}</div>
                 <div className="font-display leading-none" style={{ fontSize: 48, color: 'var(--text)' }}>
-                  {kpi.value}
+                  <SplitText
+                    text={kpi.value}
+                    splitType="chars"
+                    delay={40}
+                    duration={0.8}
+                    ease="power3.out"
+                    from={{ opacity: 0, y: 30 }}
+                    to={{ opacity: 1, y: 0 }}
+                    threshold={0.2}
+                    rootMargin="-40px"
+                  />
                 </div>
                 {kpi.delta && (
                   <div className="font-mono text-xs mt-2" style={{ color: 'var(--accent)' }}>{kpi.delta}</div>
@@ -437,70 +455,11 @@ export default function LandingPage() {
       </section>
 
       {/* ── Footer ────────────────────────────────────────── */}
-      <footer className="border-t" style={{ borderColor: 'var(--border)', background: '#000000' }}>
-
-        {/* Links grid */}
-        <div className="max-w-7xl mx-auto px-8 pt-16 pb-12">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-10">
-            {[
-              {
-                heading: 'EXPLORE',
-                links: [
-                  { label: 'Explorer', href: '/explorer' },
-                  { label: 'Workers', href: '/explorer' },
-                  { label: 'Tasks', href: '/explorer' },
-                ],
-              },
-              {
-                heading: 'BUILD',
-                links: [
-                  { label: 'Documentation', href: '#' },
-                  { label: 'GitHub', href: '#' },
-                  { label: 'API Reference', href: '#' },
-                ],
-              },
-              {
-                heading: 'LEGAL',
-                links: [
-                  { label: 'Privacy Policy', href: '#' },
-                  { label: 'Terms of Service', href: '#' },
-                ],
-              },
-              {
-                heading: 'SOCIAL',
-                links: [
-                  { label: 'Twitter / X', href: '#' },
-                  { label: 'Discord', href: '#' },
-                  { label: 'Telegram', href: '#' },
-                ],
-              },
-            ].map((col) => (
-              <div key={col.heading}>
-                <div className="eyebrow mb-5" style={{ color: 'var(--text-subtle)', letterSpacing: '0.08em' }}>
-                  {col.heading}
-                </div>
-                <div className="space-y-3">
-                  {col.links.map((l) => (
-                    <Link
-                      key={l.label}
-                      href={l.href}
-                      className="block font-sans text-base transition-colors duration-100"
-                      style={{ color: 'var(--text-muted)' }}
-                      onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--text)')}
-                      onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-muted)')}
-                    >
-                      {l.label}
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+      <footer style={{ background: '#000000' }}>
 
         {/* Get in touch row */}
         <div
-          className="max-w-7xl mx-auto px-8 py-8 flex justify-end border-b"
+          className="max-w-7xl mx-auto px-8 py-8 flex justify-end"
           style={{ borderColor: 'var(--border)' }}
         >
           <Link href="mailto:hello@agentnet.xyz" className="flex items-center gap-4 group">
@@ -518,7 +477,7 @@ export default function LandingPage() {
 
         {/* Big wordmark */}
         <div
-          className="max-w-7xl mx-auto px-8 py-10 flex items-center gap-6 md:gap-10 border-b overflow-hidden"
+          className="max-w-7xl mx-auto px-8 py-10 flex items-center justify-center gap-6 md:gap-10 border-b"
           style={{ borderColor: 'var(--border)' }}
         >
           <div
@@ -528,10 +487,45 @@ export default function LandingPage() {
             <Image src={logoImg} alt="AgentNet" width={148} height={148} className="w-full h-full object-cover" />
           </div>
           <h2
-            className="leading-none whitespace-nowrap"
-            style={{ fontFamily: 'var(--font-logo)', fontSize: 'clamp(56px, 12vw, 172px)', color: 'var(--text)' }}
+            className="leading-none whitespace-nowrap flex items-baseline"
+            style={{ fontFamily: 'var(--font-logo)', fontSize: 'clamp(56px, 12vw, 172px)' }}
           >
-            Agent<span style={{ color: 'var(--accent)' }}>Net</span>
+            <Shuffle
+              text="Agent"
+              tag="span"
+              textAlign="left"
+              style={{ color: 'var(--text)', fontSize: 'inherit', lineHeight: 'inherit', fontFamily: 'inherit' }}
+              shuffleDirection="right"
+              duration={0.35}
+              animationMode="evenodd"
+              shuffleTimes={1}
+              ease="power3.out"
+              stagger={0.03}
+              threshold={0.1}
+              triggerOnce={true}
+              triggerOnHover={true}
+              respectReducedMotion={true}
+              loop={false}
+              loopDelay={0}
+            />
+            <Shuffle
+              text="Net"
+              tag="span"
+              textAlign="left"
+              style={{ color: 'var(--accent)', fontSize: 'inherit', lineHeight: 'inherit', fontFamily: 'inherit' }}
+              shuffleDirection="right"
+              duration={0.35}
+              animationMode="evenodd"
+              shuffleTimes={1}
+              ease="power3.out"
+              stagger={0.03}
+              threshold={0.1}
+              triggerOnce={true}
+              triggerOnHover={true}
+              respectReducedMotion={true}
+              loop={false}
+              loopDelay={0}
+            />
           </h2>
         </div>
 
