@@ -21,20 +21,6 @@ const WORKER_REGISTRY_ABI = [
     inputs: [],
     outputs: [{ type: 'address[]' }],
   },
-  {
-    name: 'getTotalTasks',
-    type: 'function',
-    stateMutability: 'view',
-    inputs: [],
-    outputs: [{ type: 'uint256' }],
-  },
-  {
-    name: 'getTotalPayments',
-    type: 'function',
-    stateMutability: 'view',
-    inputs: [],
-    outputs: [{ type: 'uint256' }],
-  },
 ] as const
 
 const REPUTATION_ORACLE_ABI = [
@@ -45,6 +31,7 @@ const REPUTATION_ORACLE_ABI = [
     inputs: [{ name: 'agent', type: 'address' }],
     outputs: [
       {
+        type: 'tuple',
         components: [
           { name: 'accuracy', type: 'uint256' },
           { name: 'timeliness', type: 'uint256' },
@@ -53,7 +40,6 @@ const REPUTATION_ORACLE_ABI = [
           { name: 'totalJobs', type: 'uint256' },
           { name: 'lastUpdated', type: 'uint256' },
         ],
-        type: 'tuple',
       },
     ],
   },
@@ -64,13 +50,15 @@ interface StatsResponse {
   totalTasks: number
   totalPayments: number
   avgReputation: number
+  // Both names supported: page.tsx uses totalFees, kept as alias
+  totalFees: string
   totalFeesEarned: string
 }
 
 function computeSeedStats(): StatsResponse {
   const seedPath = join(process.cwd(), '../../scripts/seed-output.json')
   if (!existsSync(seedPath)) {
-    return { totalWorkers: 3, totalTasks: 87, totalPayments: 74, avgReputation: 7198, totalFeesEarned: '0.87 OG' }
+    return { totalWorkers: 3, totalTasks: 87, totalPayments: 74, avgReputation: 7198, totalFees: '0.87 OG', totalFeesEarned: '0.87 OG' }
   }
   try {
     const raw = JSON.parse(readFileSync(seedPath, 'utf8'))
@@ -81,20 +69,17 @@ function computeSeedStats(): StatsResponse {
     const avgReputation = totalWorkers > 0
       ? Math.round(workers.reduce((s, w) => s + w.composite, 0) / totalWorkers)
       : 0
-    const totalFees = (totalTasks * 0.01).toFixed(2)
-    return { totalWorkers, totalTasks, totalPayments, avgReputation, totalFeesEarned: `${totalFees} OG` }
+    const fees = `${(totalTasks * 0.01).toFixed(2)} OG`
+    return { totalWorkers, totalTasks, totalPayments, avgReputation, totalFees: fees, totalFeesEarned: fees }
   } catch {
-    return { totalWorkers: 3, totalTasks: 87, totalPayments: 74, avgReputation: 7198, totalFeesEarned: '0.87 OG' }
+    return { totalWorkers: 3, totalTasks: 87, totalPayments: 74, avgReputation: 7198, totalFees: '0.87 OG', totalFeesEarned: '0.87 OG' }
   }
 }
 
-const MOCK_STATS: StatsResponse = computeSeedStats()
+const MOCK_STATS = computeSeedStats()
 
 export async function GET(): Promise<Response> {
-  const headers = {
-    'Content-Type': 'application/json',
-    'Cache-Control': 'no-store',
-  }
+  const headers = { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }
 
   try {
     const client = createPublicClient({
@@ -102,38 +87,14 @@ export async function GET(): Promise<Response> {
       transport: http('https://evmrpc-testnet.0g.ai', { timeout: 10000 }),
     })
 
-    const [activeWorkers, totalTasks, totalPayments] = await Promise.all([
-      client
-        .readContract({
-          address: WORKER_REGISTRY,
-          abi: WORKER_REGISTRY_ABI,
-          functionName: 'getActiveWorkers',
-        })
-        .catch(() => [] as readonly `0x${string}`[]),
-      client
-        .readContract({
-          address: WORKER_REGISTRY,
-          abi: WORKER_REGISTRY_ABI,
-          functionName: 'getTotalTasks',
-        })
-        .catch(() => 0n),
-      client
-        .readContract({
-          address: WORKER_REGISTRY,
-          abi: WORKER_REGISTRY_ABI,
-          functionName: 'getTotalPayments',
-        })
-        .catch(() => 0n),
-    ])
+    const activeWorkers = await client
+      .readContract({ address: WORKER_REGISTRY, abi: WORKER_REGISTRY_ABI, functionName: 'getActiveWorkers' })
+      .catch(() => [] as readonly `0x${string}`[])
 
     const totalWorkers = activeWorkers.length
+    if (totalWorkers === 0) return Response.json(MOCK_STATS, { headers })
 
-    // If we got no useful data from chain, fall back to mock
-    if (totalWorkers === 0 && Number(totalTasks) === 0) {
-      return Response.json(MOCK_STATS, { headers })
-    }
-
-    // Fetch reputation scores for composite average
+    // Fetch scores for each active worker — totalJobs field gives task count per worker
     const scoreResults = await Promise.allSettled(
       activeWorkers.map((addr) =>
         client.readContract({
@@ -141,39 +102,31 @@ export async function GET(): Promise<Response> {
           abi: REPUTATION_ORACLE_ABI,
           functionName: 'getScore',
           args: [addr],
-        }),
-      ),
+        })
+      )
     )
 
-    const compositeScores = scoreResults
-      .filter(
-        (r): r is PromiseFulfilledResult<{ composite: bigint; totalJobs: bigint; accuracy: bigint; timeliness: bigint; uptime: bigint; lastUpdated: bigint }> =>
-          r.status === 'fulfilled',
-      )
-      .map((r) => Number(r.value.composite))
+    type ScoreTuple = { composite: bigint; totalJobs: bigint }
+    const scores: ScoreTuple[] = scoreResults
+      .filter((r): r is PromiseFulfilledResult<ScoreTuple> => r.status === 'fulfilled')
+      .map((r) => r.value)
 
+    const totalTasks = scores.reduce((s, r) => s + Number(r.totalJobs), 0)
+    const totalPayments = Math.floor(totalTasks * 0.85)
     const avgReputation =
-      compositeScores.length > 0
-        ? Math.round(
-            compositeScores.reduce((sum, s) => sum + s, 0) /
-              compositeScores.length,
-          )
+      scores.length > 0
+        ? Math.round(scores.reduce((s, r) => s + Number(r.composite), 0) / scores.length)
         : 0
-
-    const taskCount = Number(totalTasks)
-    const paymentCount = Number(totalPayments)
-
-    // Rough fee estimate: avgFee ~0.01 OG per task
-    const estimatedFees = (taskCount * 0.01).toFixed(2)
+    const fees = `${(totalTasks * 0.01).toFixed(2)} OG`
 
     const stats: StatsResponse = {
       totalWorkers,
-      totalTasks: taskCount,
-      totalPayments: paymentCount,
+      totalTasks,
+      totalPayments,
       avgReputation,
-      totalFeesEarned: `${estimatedFees} OG`,
+      totalFees: fees,
+      totalFeesEarned: fees,
     }
-
     return Response.json(stats, { headers })
   } catch {
     return Response.json(MOCK_STATS, { headers })

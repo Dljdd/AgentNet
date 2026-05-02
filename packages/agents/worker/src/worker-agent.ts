@@ -15,9 +15,9 @@ const WORKER_REGISTRY_ABI = [
     type: "function",
     stateMutability: "nonpayable",
     inputs: [
-      { name: "capabilities", type: "string[]" },
+      { name: "metadataUri", type: "string" },
       { name: "feePerTask", type: "uint256" },
-      { name: "preferredToken", type: "address" },
+      { name: "capabilities", type: "string[]" },
     ],
     outputs: [],
   },
@@ -152,10 +152,11 @@ export class WorkerAgent extends AgentBase {
       return "0x0";
     }
 
+    const metadataUri = `ipfs://agentnet/worker/${this.address}`;
     const data = encodeFunctionData({
       abi: WORKER_REGISTRY_ABI,
       functionName: "register",
-      args: [this.capabilities, this.feePerTask, this.preferredToken as `0x${string}`],
+      args: [metadataUri, this.feePerTask, this.capabilities],
     });
 
     const account = this.wallet.account;

@@ -5,10 +5,12 @@
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "dependencies": {
+    "@agentnet/config": "workspace:*",
     "@agentnet/types": "workspace:*",
     "@agentnet/core": "workspace:*",
     "@agentnet/integrations-0g": "workspace:*",
-    "@agentnet/integrations-keeperhub": "workspace:*"
+    "@agentnet/integrations-keeperhub": "workspace:*",
+    "viem": "^2.20.0"
   },
   "scripts": {
     "build": "tsc",

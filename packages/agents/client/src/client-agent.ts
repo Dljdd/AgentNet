@@ -25,12 +25,19 @@ const WORKER_REGISTRY_ABI = [
     name: "getWorker",
     type: "function",
     stateMutability: "view",
-    inputs: [{ name: "worker", type: "address" }],
+    inputs: [{ name: "wallet", type: "address" }],
     outputs: [
-      { name: "capabilities", type: "string[]" },
-      { name: "feePerTask", type: "uint256" },
-      { name: "preferredToken", type: "address" },
-      { name: "isActive", type: "bool" },
+      {
+        type: "tuple",
+        components: [
+          { name: "wallet", type: "address" },
+          { name: "metadataUri", type: "string" },
+          { name: "feePerTask", type: "uint256" },
+          { name: "capabilities", type: "string[]" },
+          { name: "active", type: "bool" },
+          { name: "registeredAt", type: "uint256" },
+        ],
+      },
     ],
   },
 ] as const;
@@ -42,12 +49,17 @@ const REPUTATION_ORACLE_ABI = [
     stateMutability: "view",
     inputs: [{ name: "agent", type: "address" }],
     outputs: [
-      { name: "accuracy", type: "uint256" },
-      { name: "timeliness", type: "uint256" },
-      { name: "uptime", type: "uint256" },
-      { name: "composite", type: "uint256" },
-      { name: "totalJobs", type: "uint256" },
-      { name: "lastUpdated", type: "uint256" },
+      {
+        type: "tuple",
+        components: [
+          { name: "accuracy", type: "uint256" },
+          { name: "timeliness", type: "uint256" },
+          { name: "uptime", type: "uint256" },
+          { name: "composite", type: "uint256" },
+          { name: "totalJobs", type: "uint256" },
+          { name: "lastUpdated", type: "uint256" },
+        ],
+      },
     ],
   },
 ] as const;
@@ -271,26 +283,27 @@ export class ClientAgent extends AgentBase {
       let bestFee = this.budget;
 
       for (const addr of activeWorkers) {
-        const [caps, fee, , isActive] = (await this.publicClient.readContract({
+        const workerInfo = (await this.publicClient.readContract({
           address: registryAddress as `0x${string}`,
           abi: WORKER_REGISTRY_ABI,
           functionName: "getWorker",
           args: [addr],
-        })) as [string[], bigint, string, boolean];
+        })) as { wallet: string; metadataUri: string; feePerTask: bigint; capabilities: string[]; active: boolean; registeredAt: bigint };
 
+        const { capabilities: caps, feePerTask: fee, active: isActive } = workerInfo;
         if (!isActive || !caps.includes(taskType) || fee > this.budget) continue;
 
         let composite = 0n;
         const oracleAddress = cfg.contracts.reputationOracle;
         if (oracleAddress) {
           try {
-            const scoreArr = (await this.publicClient.readContract({
+            const score = (await this.publicClient.readContract({
               address: oracleAddress as `0x${string}`,
               abi: REPUTATION_ORACLE_ABI,
               functionName: "getScore",
               args: [addr],
-            })) as [bigint, bigint, bigint, bigint, bigint, bigint];
-            composite = scoreArr[3];
+            })) as { composite: bigint };
+            composite = score.composite;
           } catch {
             composite = 5000n;
           }
