@@ -36,28 +36,6 @@ function formatXAxis(timestamp: number, range: TimeRange): string {
   return date.toLocaleDateString('en-US', { weekday: 'short' })
 }
 
-function generateSyntheticData(hours = 24): ScorePoint[] {
-  const now = Date.now()
-  const points: ScorePoint[] = []
-  let acc = 7500
-  let tim = 7200
-  let upt = 8000
-  for (let i = hours; i >= 0; i--) {
-    const walk = () => Math.floor((Math.random() - 0.5) * 200)
-    acc = Math.max(0, Math.min(10000, acc + walk()))
-    tim = Math.max(0, Math.min(10000, tim + walk()))
-    upt = Math.max(0, Math.min(10000, upt + walk()))
-    const composite = Math.round(acc * 0.5 + tim * 0.3 + upt * 0.2)
-    points.push({
-      timestamp: now - i * 3600 * 1000,
-      accuracy: acc,
-      timeliness: tim,
-      uptime: upt,
-      composite,
-    })
-  }
-  return points
-}
 
 interface CustomTooltipProps {
   active?: boolean
@@ -92,7 +70,7 @@ export default function ScoreTimeline({ address, timeRange: initialRange = '24h'
   const { data, error, isLoading } = useSWR<ScoresResponse>('/api/scores', fetcher)
 
   const chartData = useMemo(() => {
-    const raw: ScorePoint[] = data?.history?.[address] ?? generateSyntheticData(24)
+    const raw: ScorePoint[] = data?.history?.[address] ?? []
 
     const now = Date.now()
     const cutoff: Record<TimeRange, number> = {

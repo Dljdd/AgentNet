@@ -1,6 +1,7 @@
 // GET /api/workers — M-25
 import { NextRequest } from 'next/server'
 import { createPublicClient, http, formatEther, defineChain } from 'viem'
+import { sepolia } from 'viem/chains'
 import type { WorkerListItem, TaskType, AgentStatus } from '@agentnet/types'
 import { readFileSync, existsSync } from 'fs'
 import { join } from 'path'
@@ -12,7 +13,11 @@ const zgGalileo = defineChain({
   rpcUrls: { default: { http: ['https://evmrpc-testnet.0g.ai'] } },
 })
 
-const WORKER_REGISTRY = '0xde94A743D06143b08E4B49E3812D570065BEdC51' as const
+// Sepolia deployments (primary)
+const SEPOLIA_WORKER_REGISTRY = '0x31A664dA982495c9496C1626fE25cBFcE7Ab22a5' as const
+const SEPOLIA_REPUTATION_ORACLE = '0xde94A743D06143b08E4B49E3812D570065BEdC51' as const
+// 0G Galileo deployments (fallback)
+const WORKER_REGISTRY = '0x31A664dA982495c9496C1626fE25cBFcE7Ab22a5' as const
 const REPUTATION_ORACLE = '0x19139CDE2d0da0B148bE69cD4261AA62B9d4F125' as const
 
 const WORKER_REGISTRY_ABI = [
@@ -193,43 +198,29 @@ export async function GET(request: NextRequest): Promise<Response> {
     'Cache-Control': 'no-store',
   }
 
-  try {
-    const client = createPublicClient({
-      chain: zgGalileo,
-      transport: http('https://evmrpc-testnet.0g.ai', { timeout: 10000 }),
-    })
-
+  async function fetchWorkersFromChain(
+    registryAddr: `0x${string}`,
+    oracleAddr: `0x${string}`,
+    chain: Parameters<typeof createPublicClient>[0]['chain'],
+    rpcUrl: string,
+  ): Promise<WorkerListItem[] | null> {
+    const client = createPublicClient({ chain, transport: http(rpcUrl, { timeout: 10000 }) })
     const activeAddresses = await client.readContract({
-      address: WORKER_REGISTRY,
+      address: registryAddr,
       abi: WORKER_REGISTRY_ABI,
       functionName: 'getActiveWorkers',
     })
+    if (!activeAddresses || activeAddresses.length === 0) return null
 
-    if (!activeAddresses || activeAddresses.length === 0) {
-      const workers = applyFilters(MOCK_WORKERS, capability, sortBy)
-      return Response.json(workers, { headers })
-    }
-
-    const workerResults = await Promise.allSettled(
+    const settled = await Promise.allSettled(
       activeAddresses.map(async (addr) => {
         const [workerData, scoreData] = await Promise.all([
-          client.readContract({
-            address: WORKER_REGISTRY,
-            abi: WORKER_REGISTRY_ABI,
-            functionName: 'getWorker',
-            args: [addr],
-          }),
-          client.readContract({
-            address: REPUTATION_ORACLE,
-            abi: REPUTATION_ORACLE_ABI,
-            functionName: 'getScore',
-            args: [addr],
-          }),
+          client.readContract({ address: registryAddr, abi: WORKER_REGISTRY_ABI, functionName: 'getWorker', args: [addr] }),
+          client.readContract({ address: oracleAddr, abi: REPUTATION_ORACLE_ABI, functionName: 'getScore', args: [addr] }),
         ])
-
-        const item: WorkerListItem = {
+        return {
           address: addr,
-          status: workerData.active ? 'idle' : ('offline' as AgentStatus),
+          status: (workerData.active ? 'idle' : 'offline') as AgentStatus,
           score: {
             accuracy: Number(scoreData.accuracy),
             timeliness: Number(scoreData.timeliness),
@@ -240,27 +231,36 @@ export async function GET(request: NextRequest): Promise<Response> {
           },
           capabilities: workerData.capabilities as TaskType[],
           feePerTask: formatEther(workerData.feePerTask),
-        }
-        return item
+        } as WorkerListItem
       }),
     )
-
-    const workers: WorkerListItem[] = workerResults
-      .filter(
-        (r): r is PromiseFulfilledResult<WorkerListItem> =>
-          r.status === 'fulfilled',
-      )
-      .map((r) => r.value)
-
-    if (workers.length === 0) {
-      const fallback = applyFilters(MOCK_WORKERS, capability, sortBy)
-      return Response.json(fallback, { headers })
-    }
-
-    const filtered = applyFilters(workers, capability, sortBy)
-    return Response.json(filtered, { headers })
-  } catch {
-    const workers = applyFilters(MOCK_WORKERS, capability, sortBy)
-    return Response.json(workers, { headers })
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const items = settled.filter((r) => r.status === 'fulfilled').map((r) => (r as PromiseFulfilledResult<WorkerListItem>).value)
+    return items.length > 0 ? items : null
   }
+
+  // Try Sepolia (correct addresses, scored workers), then 0G Galileo, then seed fallback.
+  let chainWorkers: WorkerListItem[] | null = null
+  try {
+    chainWorkers = await fetchWorkersFromChain(
+      SEPOLIA_WORKER_REGISTRY,
+      SEPOLIA_REPUTATION_ORACLE,
+      sepolia,
+      'https://ethereum-sepolia-rpc.publicnode.com',
+    )
+  } catch { /* fall through */ }
+
+  if (!chainWorkers) {
+    try {
+      chainWorkers = await fetchWorkersFromChain(
+        WORKER_REGISTRY,
+        REPUTATION_ORACLE,
+        zgGalileo,
+        'https://evmrpc-testnet.0g.ai',
+      )
+    } catch { /* fall through */ }
+  }
+
+  const source = chainWorkers ?? MOCK_WORKERS
+  return Response.json(applyFilters(source, capability, sortBy), { headers })
 }

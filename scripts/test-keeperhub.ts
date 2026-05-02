@@ -24,7 +24,7 @@ async function run() {
     process.exit(1);
   }
 
-  const client = new KeeperHubClient({ pollIntervalMs: 3_000, timeoutMs: 60_000 });
+  const client = new KeeperHubClient({ pollIntervalMs: 3_000, timeoutMs: 300_000 });
   const settlement = new KeeperHubSettlement(client);
 
   console.log("✓ KeeperHub base URL:", client.baseUrl);

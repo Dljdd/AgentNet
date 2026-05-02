@@ -1,5 +1,6 @@
 // GET /api/scores — M-27
 import { createPublicClient, http, defineChain } from 'viem'
+import { sepolia } from 'viem/chains'
 import type { ReputationScore } from '@agentnet/types'
 import { readFileSync, existsSync } from 'fs'
 import { join } from 'path'
@@ -11,6 +12,9 @@ const zgGalileo = defineChain({
   rpcUrls: { default: { http: ['https://evmrpc-testnet.0g.ai'] } },
 })
 
+// Sepolia deployment (primary — all 25 seed workers scored here)
+const SEPOLIA_ORACLE = '0xde94A743D06143b08E4B49E3812D570065BEdC51' as const
+// 0G Galileo deployment (fallback — Para MPC writes currently non-functional)
 const REPUTATION_ORACLE = '0x19139CDE2d0da0B148bE69cD4261AA62B9d4F125' as const
 
 // getTopAgents returns two separate arrays: (address[], AgentScore[])
@@ -112,47 +116,67 @@ function generateHistory(baseScore: ReputationScore, address: string): ScorePoin
   })
 }
 
+type RawScore = { accuracy: bigint; timeliness: bigint; uptime: bigint; composite: bigint; totalJobs: bigint; lastUpdated: bigint }
+
+async function fetchAgentsFromChain(
+  oracleAddress: `0x${string}`,
+  chain: Parameters<typeof createPublicClient>[0]['chain'],
+  rpcUrl: string,
+): Promise<Array<{ address: string; score: ReputationScore }> | null> {
+  const client = createPublicClient({
+    chain,
+    transport: http(rpcUrl, { timeout: 10000 }),
+  })
+
+  const [addrs, rawScores] = (await client.readContract({
+    address: oracleAddress,
+    abi: REPUTATION_ORACLE_ABI,
+    functionName: 'getTopAgents',
+    args: [50n],
+  })) as [readonly `0x${string}`[], readonly RawScore[]]
+
+  if (!addrs || addrs.length === 0) return null
+
+  return addrs.map((addr, i) => ({
+    address: addr,
+    score: {
+      accuracy: Number(rawScores[i].accuracy),
+      timeliness: Number(rawScores[i].timeliness),
+      uptime: Number(rawScores[i].uptime),
+      composite: Number(rawScores[i].composite),
+      totalJobs: Number(rawScores[i].totalJobs),
+      lastUpdated: Number(rawScores[i].lastUpdated) * 1000,
+    },
+  }))
+}
+
 export async function GET(): Promise<Response> {
   const headers = { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }
 
+  // Try Sepolia first (all 25 seed workers were scored here), then 0G Galileo, then seed fallback.
+  let agents: Array<{ address: string; score: ReputationScore }> | null = null
+
   try {
-    const client = createPublicClient({
-      chain: zgGalileo,
-      transport: http('https://evmrpc-testnet.0g.ai', { timeout: 10000 }),
-    })
+    agents = await fetchAgentsFromChain(
+      SEPOLIA_ORACLE,
+      sepolia,
+      'https://ethereum-sepolia-rpc.publicnode.com',
+    )
+  } catch { /* fall through */ }
 
-    // getTopAgents returns [address[], AgentScore[]]
-    const [addrs, rawScores] = (await client.readContract({
-      address: REPUTATION_ORACLE,
-      abi: REPUTATION_ORACLE_ABI,
-      functionName: 'getTopAgents',
-      args: [50n],
-    })) as [
-      readonly `0x${string}`[],
-      readonly { accuracy: bigint; timeliness: bigint; uptime: bigint; composite: bigint; totalJobs: bigint; lastUpdated: bigint }[]
-    ]
-
-    if (!addrs || addrs.length === 0) throw new Error('No agents returned from chain')
-
-    const agents: Array<{ address: string; score: ReputationScore }> = addrs.map((addr, i) => ({
-      address: addr,
-      score: {
-        accuracy: Number(rawScores[i].accuracy),
-        timeliness: Number(rawScores[i].timeliness),
-        uptime: Number(rawScores[i].uptime),
-        composite: Number(rawScores[i].composite),
-        totalJobs: Number(rawScores[i].totalJobs),
-        lastUpdated: Number(rawScores[i].lastUpdated) * 1000,
-      },
-    }))
-
-    const history: Record<string, ScorePoint[]> = {}
-    for (const agent of agents) history[agent.address] = generateHistory(agent.score, agent.address)
-
-    return Response.json({ agents, history } satisfies ScoresResponse, { headers })
-  } catch {
-    const history: Record<string, ScorePoint[]> = {}
-    for (const agent of MOCK_AGENTS) history[agent.address] = generateHistory(agent.score, agent.address)
-    return Response.json({ agents: MOCK_AGENTS, history } satisfies ScoresResponse, { headers })
+  if (!agents) {
+    try {
+      agents = await fetchAgentsFromChain(
+        REPUTATION_ORACLE,
+        zgGalileo,
+        'https://evmrpc-testnet.0g.ai',
+      )
+    } catch { /* fall through */ }
   }
+
+  const resolved = agents ?? MOCK_AGENTS
+  const history: Record<string, ScorePoint[]> = {}
+  for (const agent of resolved) history[agent.address] = generateHistory(agent.score, agent.address)
+
+  return Response.json({ agents: resolved, history } satisfies ScoresResponse, { headers })
 }

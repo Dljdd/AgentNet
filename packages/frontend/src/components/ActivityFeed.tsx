@@ -129,7 +129,7 @@ export default function ActivityFeed({ filter: initialFilter = 'all', maxItems =
                   )}
                   {event.txHash && (
                     <a
-                      href={`https://chainscan-galileo.0g.ai/tx/${event.txHash}`}
+                      href={`https://sepolia.etherscan.io/tx/${event.txHash}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="font-mono text-xs text-gray-500 hover:text-gray-300 transition-colors mt-0.5 inline-block"
