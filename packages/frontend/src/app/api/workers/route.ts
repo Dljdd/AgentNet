@@ -2,6 +2,8 @@
 import { NextRequest } from 'next/server'
 import { createPublicClient, http, formatEther, defineChain } from 'viem'
 import type { WorkerListItem, TaskType, AgentStatus } from '@agentnet/types'
+import { readFileSync, existsSync } from 'fs'
+import { join } from 'path'
 
 const zgGalileo = defineChain({
   id: 16602,
@@ -64,7 +66,55 @@ const REPUTATION_ORACLE_ABI = [
   },
 ] as const
 
-const MOCK_WORKERS: WorkerListItem[] = [
+interface SeedWorker {
+  index: number
+  profile: string
+  address: string
+  capabilities: string[]
+  feePerTask: string
+  accuracy: number
+  timeliness: number
+  uptime: number
+  composite: number
+  totalJobs: number
+}
+
+function statusFromProfile(profile: string, index: number): AgentStatus {
+  if (profile === 'broken') return 'error'
+  if (profile === 'mediocre' && index % 3 === 0) return 'working'
+  if (profile === 'elite' && index % 4 === 0) return 'working'
+  return 'idle'
+}
+
+function loadSeedWorkers(): WorkerListItem[] {
+  const seedPath = join(process.cwd(), '../../scripts/seed-output.json')
+  if (!existsSync(seedPath)) return []
+  try {
+    const raw = JSON.parse(readFileSync(seedPath, 'utf8'))
+    const workers: SeedWorker[] = raw.workers ?? []
+    const now = Date.now()
+    return workers.map((w, i) => ({
+      address: w.address,
+      status: statusFromProfile(w.profile, i),
+      score: {
+        accuracy: w.accuracy,
+        timeliness: w.timeliness,
+        uptime: w.uptime,
+        composite: w.composite,
+        totalJobs: w.totalJobs,
+        lastUpdated: now - i * 180000,
+      },
+      capabilities: w.capabilities as TaskType[],
+      feePerTask: formatEther(BigInt(w.feePerTask)),
+    }))
+  } catch {
+    return []
+  }
+}
+
+const SEED_WORKERS = loadSeedWorkers()
+
+const MOCK_WORKERS: WorkerListItem[] = SEED_WORKERS.length > 0 ? SEED_WORKERS : [
   {
     address: '0xFBEd89164eD414729D180948c05EBa60E56a803d',
     status: 'idle',

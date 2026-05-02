@@ -1,5 +1,7 @@
 // GET /api/stats — M-25
 import { createPublicClient, http, defineChain } from 'viem'
+import { readFileSync, existsSync } from 'fs'
+import { join } from 'path'
 
 const zgGalileo = defineChain({
   id: 16602,
@@ -65,13 +67,28 @@ interface StatsResponse {
   totalFeesEarned: string
 }
 
-const MOCK_STATS: StatsResponse = {
-  totalWorkers: 3,
-  totalTasks: 87,
-  totalPayments: 74,
-  avgReputation: 7198,
-  totalFeesEarned: '0.87 OG',
+function computeSeedStats(): StatsResponse {
+  const seedPath = join(process.cwd(), '../../scripts/seed-output.json')
+  if (!existsSync(seedPath)) {
+    return { totalWorkers: 3, totalTasks: 87, totalPayments: 74, avgReputation: 7198, totalFeesEarned: '0.87 OG' }
+  }
+  try {
+    const raw = JSON.parse(readFileSync(seedPath, 'utf8'))
+    const workers: Array<{ composite: number; totalJobs: number }> = raw.workers ?? []
+    const totalWorkers = workers.length
+    const totalTasks = workers.reduce((s, w) => s + w.totalJobs, 0)
+    const totalPayments = Math.floor(totalTasks * 0.85)
+    const avgReputation = totalWorkers > 0
+      ? Math.round(workers.reduce((s, w) => s + w.composite, 0) / totalWorkers)
+      : 0
+    const totalFees = (totalTasks * 0.01).toFixed(2)
+    return { totalWorkers, totalTasks, totalPayments, avgReputation, totalFeesEarned: `${totalFees} OG` }
+  } catch {
+    return { totalWorkers: 3, totalTasks: 87, totalPayments: 74, avgReputation: 7198, totalFeesEarned: '0.87 OG' }
+  }
 }
+
+const MOCK_STATS: StatsResponse = computeSeedStats()
 
 export async function GET(): Promise<Response> {
   const headers = {

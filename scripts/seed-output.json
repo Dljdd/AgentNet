@@ -1,0 +1,431 @@
+{
+  "seededAt": "2026-05-02T12:50:29.126Z",
+  "fastMode": false,
+  "count": 25,
+  "workers": [
+    {
+      "index": 0,
+      "profile": "broken",
+      "address": "0xF3C5e1eFDBD87132FA14626d3C602A33702191b5",
+      "capabilities": [
+        "token-fact-checker"
+      ],
+      "feePerTask": "90000000000000000",
+      "accuracy": 110,
+      "timeliness": 234,
+      "uptime": 361,
+      "composite": 197,
+      "totalJobs": 6,
+      "registered": true,
+      "scored": true
+    },
+    {
+      "index": 1,
+      "profile": "broken",
+      "address": "0xa93DCfD27A7b763BdFcA1875680b57e3e3c76955",
+      "capabilities": [
+        "token-fact-checker",
+        "wallet-summarizer"
+      ],
+      "feePerTask": "120000000000000000",
+      "accuracy": 179,
+      "timeliness": 530,
+      "uptime": 320,
+      "composite": 312,
+      "totalJobs": 10,
+      "registered": true,
+      "scored": true
+    },
+    {
+      "index": 2,
+      "profile": "broken",
+      "address": "0xa3194E7893C35cC4DeE4965EBAdDcd189b71C879",
+      "capabilities": [
+        "token-fact-checker",
+        "wallet-summarizer",
+        "pool-indexer"
+      ],
+      "feePerTask": "30000000000000000",
+      "accuracy": 610,
+      "timeliness": 314,
+      "uptime": 319,
+      "composite": 463,
+      "totalJobs": 10,
+      "registered": true,
+      "scored": true
+    },
+    {
+      "index": 3,
+      "profile": "elite",
+      "address": "0xf797dd857b774DE4582db2487ef28737326e0372",
+      "capabilities": [
+        "pool-indexer"
+      ],
+      "feePerTask": "200000000000000000",
+      "accuracy": 9005,
+      "timeliness": 9679,
+      "uptime": 9671,
+      "composite": 9340,
+      "totalJobs": 33,
+      "registered": true,
+      "scored": true
+    },
+    {
+      "index": 4,
+      "profile": "elite",
+      "address": "0x475b7a5B610AAB63Dd6B499b768B592bCd94cddF",
+      "capabilities": [
+        "pool-indexer",
+        "wallet-summarizer"
+      ],
+      "feePerTask": "140000000000000000",
+      "accuracy": 9777,
+      "timeliness": 9198,
+      "uptime": 9632,
+      "composite": 9574,
+      "totalJobs": 42,
+      "registered": true,
+      "scored": true
+    },
+    {
+      "index": 5,
+      "profile": "elite",
+      "address": "0x556F7eb49AfAba23a2C03C3b32dDF6DaC5D5a6FC",
+      "capabilities": [
+        "pool-indexer",
+        "wallet-summarizer",
+        "token-fact-checker"
+      ],
+      "feePerTask": "80000000000000000",
+      "accuracy": 9306,
+      "timeliness": 9506,
+      "uptime": 9278,
+      "composite": 9360,
+      "totalJobs": 44,
+      "registered": true,
+      "scored": true
+    },
+    {
+      "index": 6,
+      "profile": "elite",
+      "address": "0x79273fc27e541614c6Fc6E9C180a9cDb21648C82",
+      "capabilities": [
+        "pool-indexer"
+      ],
+      "feePerTask": "30000000000000000",
+      "accuracy": 9480,
+      "timeliness": 9604,
+      "uptime": 9263,
+      "composite": 9473,
+      "totalJobs": 32,
+      "registered": true,
+      "scored": true
+    },
+    {
+      "index": 7,
+      "profile": "elite",
+      "address": "0x52237b73ccedDdf03Ad7500d5C93a3F97008b232",
+      "capabilities": [
+        "token-fact-checker",
+        "wallet-summarizer"
+      ],
+      "feePerTask": "50000000000000000",
+      "accuracy": 9775,
+      "timeliness": 9108,
+      "uptime": 9260,
+      "composite": 9471,
+      "totalJobs": 45,
+      "registered": true,
+      "scored": true
+    },
+    {
+      "index": 8,
+      "profile": "good",
+      "address": "0x0EBbB410c92B06EC370b324C6c10eDD90Eb20B39",
+      "capabilities": [
+        "token-fact-checker",
+        "wallet-summarizer",
+        "pool-indexer"
+      ],
+      "feePerTask": "160000000000000000",
+      "accuracy": 7913,
+      "timeliness": 8229,
+      "uptime": 8452,
+      "composite": 8115,
+      "totalJobs": 15,
+      "registered": true,
+      "scored": true
+    },
+    {
+      "index": 9,
+      "profile": "good",
+      "address": "0x2b4062A2f2b52aEf61Ce1B251077507f1cbb5529",
+      "capabilities": [
+        "token-fact-checker"
+      ],
+      "feePerTask": "150000000000000000",
+      "accuracy": 7075,
+      "timeliness": 7851,
+      "uptime": 8299,
+      "composite": 7552,
+      "totalJobs": 16,
+      "registered": true,
+      "scored": true
+    },
+    {
+      "index": 10,
+      "profile": "good",
+      "address": "0x0bD113683c2443fe0faE711b0711784339B5129e",
+      "capabilities": [
+        "pool-indexer",
+        "wallet-summarizer"
+      ],
+      "feePerTask": "190000000000000000",
+      "accuracy": 7813,
+      "timeliness": 7433,
+      "uptime": 8019,
+      "composite": 7740,
+      "totalJobs": 24,
+      "registered": true,
+      "scored": true
+    },
+    {
+      "index": 11,
+      "profile": "good",
+      "address": "0xbC8e2F3348Ff20Ac56b3B7592EB80aA606513Fb3",
+      "capabilities": [
+        "pool-indexer",
+        "wallet-summarizer",
+        "token-fact-checker"
+      ],
+      "feePerTask": "70000000000000000",
+      "accuracy": 7020,
+      "timeliness": 7331,
+      "uptime": 8541,
+      "composite": 7417,
+      "totalJobs": 28,
+      "registered": true,
+      "scored": true
+    },
+    {
+      "index": 12,
+      "profile": "good",
+      "address": "0x8A88c6A7e014AADa736810d2d501c9333d854cA1",
+      "capabilities": [
+        "pool-indexer"
+      ],
+      "feePerTask": "120000000000000000",
+      "accuracy": 8438,
+      "timeliness": 7722,
+      "uptime": 7677,
+      "composite": 8071,
+      "totalJobs": 16,
+      "registered": true,
+      "scored": true
+    },
+    {
+      "index": 13,
+      "profile": "good",
+      "address": "0x7d241f1426EBA9582977f00ebe0CE2b7B8FD6dF2",
+      "capabilities": [
+        "pool-indexer",
+        "wallet-summarizer"
+      ],
+      "feePerTask": "70000000000000000",
+      "accuracy": 8498,
+      "timeliness": 8012,
+      "uptime": 8452,
+      "composite": 8343,
+      "totalJobs": 29,
+      "registered": true,
+      "scored": true
+    },
+    {
+      "index": 14,
+      "profile": "good",
+      "address": "0x58C7c3ea287FECFaD5B32a4402dFeb324c6223CE",
+      "capabilities": [
+        "token-fact-checker",
+        "wallet-summarizer",
+        "pool-indexer"
+      ],
+      "feePerTask": "140000000000000000",
+      "accuracy": 7957,
+      "timeliness": 8222,
+      "uptime": 7939,
+      "composite": 8032,
+      "totalJobs": 18,
+      "registered": true,
+      "scored": true
+    },
+    {
+      "index": 15,
+      "profile": "mediocre",
+      "address": "0x66074e4a34F2f304871115b05e3C32e93bdBDa1E",
+      "capabilities": [
+        "token-fact-checker"
+      ],
+      "feePerTask": "160000000000000000",
+      "accuracy": 4887,
+      "timeliness": 4543,
+      "uptime": 6117,
+      "composite": 5029,
+      "totalJobs": 18,
+      "registered": true,
+      "scored": true
+    },
+    {
+      "index": 16,
+      "profile": "mediocre",
+      "address": "0x54954dFCeBd62f3BA95C0d22fE81e3cAbDdb4fF9",
+      "capabilities": [
+        "token-fact-checker",
+        "wallet-summarizer"
+      ],
+      "feePerTask": "90000000000000000",
+      "accuracy": 5276,
+      "timeliness": 4646,
+      "uptime": 4798,
+      "composite": 4991,
+      "totalJobs": 12,
+      "registered": true,
+      "scored": true
+    },
+    {
+      "index": 17,
+      "profile": "mediocre",
+      "address": "0x72B03397Be401f1e5A9CEBf03F76004b006C9d89",
+      "capabilities": [
+        "pool-indexer",
+        "wallet-summarizer",
+        "token-fact-checker"
+      ],
+      "feePerTask": "90000000000000000",
+      "accuracy": 5398,
+      "timeliness": 4752,
+      "uptime": 5326,
+      "composite": 5189,
+      "totalJobs": 9,
+      "registered": true,
+      "scored": true
+    },
+    {
+      "index": 18,
+      "profile": "mediocre",
+      "address": "0xFF252712E0BdAD73A99F0165242cf78ebD6D8F0f",
+      "capabilities": [
+        "pool-indexer"
+      ],
+      "feePerTask": "180000000000000000",
+      "accuracy": 5281,
+      "timeliness": 4948,
+      "uptime": 6159,
+      "composite": 5356,
+      "totalJobs": 8,
+      "registered": true,
+      "scored": true
+    },
+    {
+      "index": 19,
+      "profile": "mediocre",
+      "address": "0x50dF81F7e27AeE2c28AbE788f11fC621e1B307BF",
+      "capabilities": [
+        "pool-indexer",
+        "wallet-summarizer"
+      ],
+      "feePerTask": "170000000000000000",
+      "accuracy": 4437,
+      "timeliness": 3634,
+      "uptime": 4678,
+      "composite": 4244,
+      "totalJobs": 12,
+      "registered": true,
+      "scored": true
+    },
+    {
+      "index": 20,
+      "profile": "new",
+      "address": "0xD51974E76935286EE97C996a14bB06f6ABF8E6B7",
+      "capabilities": [
+        "pool-indexer",
+        "wallet-summarizer",
+        "token-fact-checker"
+      ],
+      "feePerTask": "200000000000000000",
+      "accuracy": 7766,
+      "timeliness": 6849,
+      "uptime": 7423,
+      "composite": 7422,
+      "totalJobs": 4,
+      "registered": true,
+      "scored": true
+    },
+    {
+      "index": 21,
+      "profile": "new",
+      "address": "0xb4939aFC53544cA7224A779712e050fb21d1059E",
+      "capabilities": [
+        "token-fact-checker"
+      ],
+      "feePerTask": "180000000000000000",
+      "accuracy": 6607,
+      "timeliness": 6365,
+      "uptime": 7431,
+      "composite": 6699,
+      "totalJobs": 2,
+      "registered": true,
+      "scored": true
+    },
+    {
+      "index": 22,
+      "profile": "new",
+      "address": "0xBF00D3CCe3c534036f565d79E7969108D0507213",
+      "capabilities": [
+        "token-fact-checker",
+        "wallet-summarizer"
+      ],
+      "feePerTask": "180000000000000000",
+      "accuracy": 7349,
+      "timeliness": 7427,
+      "uptime": 8048,
+      "composite": 7512,
+      "totalJobs": 1,
+      "registered": true,
+      "scored": true
+    },
+    {
+      "index": 23,
+      "profile": "new",
+      "address": "0xAF128d02F55C504a6Ce028099A0B001cDCFED7E9",
+      "capabilities": [
+        "token-fact-checker",
+        "wallet-summarizer",
+        "pool-indexer"
+      ],
+      "feePerTask": "60000000000000000",
+      "accuracy": 7860,
+      "timeliness": 6491,
+      "uptime": 7793,
+      "composite": 7435,
+      "totalJobs": 5,
+      "registered": true,
+      "scored": true
+    },
+    {
+      "index": 24,
+      "profile": "new",
+      "address": "0x1914A04ED1EFd32c3C1EDC4Ca11aE172596344FE",
+      "capabilities": [
+        "pool-indexer"
+      ],
+      "feePerTask": "40000000000000000",
+      "accuracy": 7090,
+      "timeliness": 6026,
+      "uptime": 8386,
+      "composite": 7030,
+      "totalJobs": 2,
+      "registered": true,
+      "scored": true
+    }
+  ]
+}

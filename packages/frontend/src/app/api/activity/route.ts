@@ -1,8 +1,22 @@
 // GET /api/activity — M-25
 import { NextRequest } from 'next/server'
 import type { ActivityEvent } from '@agentnet/types'
+import { readFileSync, existsSync } from 'fs'
+import { join } from 'path'
 
-const ADDRESSES = [
+function loadSeedAddresses(): string[] {
+  const seedPath = join(process.cwd(), '../../scripts/seed-output.json')
+  if (!existsSync(seedPath)) return []
+  try {
+    const raw = JSON.parse(readFileSync(seedPath, 'utf8'))
+    return (raw.workers ?? []).map((w: { address: string }) => w.address).slice(0, 8)
+  } catch {
+    return []
+  }
+}
+
+const seedAddresses = loadSeedAddresses()
+const ADDRESSES = seedAddresses.length >= 5 ? seedAddresses : [
   '0xFBEd89164eD414729D180948c05EBa60E56a803d',
   '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
   '0x742d35Cc6634C0532925a3b8D4C9a8B1D6f3E7A',

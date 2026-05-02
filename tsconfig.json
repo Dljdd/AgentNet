@@ -4,7 +4,18 @@
     "moduleResolution": "NodeNext",
     "module": "NodeNext",
     "rootDir": ".",
-    "outDir": "./dist"
+    "outDir": "./dist",
+    "paths": {
+      "@agentnet/types": ["./packages/types/src/index.ts"],
+      "@agentnet/config": ["./packages/config/src/index.ts"],
+      "@agentnet/core": ["./packages/core/src/index.ts"],
+      "@agentnet/agents-worker": ["./packages/agents/worker/src/index.ts"],
+      "@agentnet/agents-client": ["./packages/agents/client/src/index.ts"],
+      "@agentnet/agents-reputation": ["./packages/agents/reputation/src/index.ts"],
+      "@agentnet/integrations-0g": ["./packages/integrations/0g/src/index.ts"],
+      "@agentnet/integrations-uniswap": ["./packages/integrations/uniswap/src/index.ts"],
+      "@agentnet/integrations-keeperhub": ["./packages/integrations/keeperhub/src/index.ts"]
+    }
   },
   "include": ["scripts/**/*.ts"],
   "exclude": ["node_modules", "dist", "packages"]

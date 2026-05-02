@@ -7,8 +7,10 @@
   "dependencies": {
     "@agentnet/types": "workspace:*",
     "@agentnet/core": "workspace:*",
+    "@agentnet/config": "workspace:*",
     "@agentnet/integrations-uniswap": "workspace:*",
     "@agentnet/integrations-keeperhub": "workspace:*",
+    "nanoid": "^5.0.0",
     "viem": "^2.20.0"
   },
   "scripts": {

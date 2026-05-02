@@ -1,6 +1,8 @@
 // GET /api/scores — M-25
 import { createPublicClient, http, defineChain } from 'viem'
 import type { ReputationScore } from '@agentnet/types'
+import { readFileSync, existsSync } from 'fs'
+import { join } from 'path'
 
 const zgGalileo = defineChain({
   id: 16602,
@@ -53,41 +55,58 @@ interface ScoresResponse {
   history: Record<string, ScorePoint[]>
 }
 
-const MOCK_AGENTS: Array<{ address: string; score: ReputationScore }> = [
-  {
-    address: '0xFBEd89164eD414729D180948c05EBa60E56a803d',
-    score: {
-      accuracy: 9200,
-      timeliness: 8900,
-      uptime: 9500,
-      composite: 9185,
-      totalJobs: 47,
-      lastUpdated: Date.now() - 120000,
+function loadSeedAgents(): Array<{ address: string; score: ReputationScore }> {
+  const seedPath = join(process.cwd(), '../../scripts/seed-output.json')
+  if (!existsSync(seedPath)) return []
+  try {
+    const raw = JSON.parse(readFileSync(seedPath, 'utf8'))
+    const workers: Array<{
+      address: string; accuracy: number; timeliness: number;
+      uptime: number; composite: number; totalJobs: number
+    }> = raw.workers ?? []
+    const now = Date.now()
+    return workers.map((w, i) => ({
+      address: w.address,
+      score: {
+        accuracy: w.accuracy,
+        timeliness: w.timeliness,
+        uptime: w.uptime,
+        composite: w.composite,
+        totalJobs: w.totalJobs,
+        lastUpdated: now - i * 180000,
+      },
+    }))
+  } catch {
+    return []
+  }
+}
+
+const SEED_AGENTS = loadSeedAgents()
+
+const MOCK_AGENTS: Array<{ address: string; score: ReputationScore }> =
+  SEED_AGENTS.length > 0 ? SEED_AGENTS : [
+    {
+      address: '0xFBEd89164eD414729D180948c05EBa60E56a803d',
+      score: {
+        accuracy: 9200, timeliness: 8900, uptime: 9500,
+        composite: 9185, totalJobs: 47, lastUpdated: Date.now() - 120000,
+      },
     },
-  },
-  {
-    address: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
-    score: {
-      accuracy: 7400,
-      timeliness: 7100,
-      uptime: 8200,
-      composite: 7490,
-      totalJobs: 28,
-      lastUpdated: Date.now() - 300000,
+    {
+      address: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
+      score: {
+        accuracy: 7400, timeliness: 7100, uptime: 8200,
+        composite: 7490, totalJobs: 28, lastUpdated: Date.now() - 300000,
+      },
     },
-  },
-  {
-    address: '0x742d35Cc6634C0532925a3b8D4C9a8B1D6f3E7A',
-    score: {
-      accuracy: 4800,
-      timeliness: 5200,
-      uptime: 4600,
-      composite: 4920,
-      totalJobs: 12,
-      lastUpdated: Date.now() - 600000,
+    {
+      address: '0x742d35Cc6634C0532925a3b8D4C9a8B1D6f3E7A',
+      score: {
+        accuracy: 4800, timeliness: 5200, uptime: 4600,
+        composite: 4920, totalJobs: 12, lastUpdated: Date.now() - 600000,
+      },
     },
-  },
-]
+  ]
 
 function generateHistory(
   baseScore: ReputationScore,

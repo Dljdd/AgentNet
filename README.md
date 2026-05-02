@@ -68,25 +68,35 @@ cp .env.example .env
 
 ### Run
 ```bash
-# Deploy contracts
-pnpm --filter contracts deploy
+# (Optional) Deploy fresh contracts — already deployed, addresses in .env
+pnpm --filter contracts deploy:0g-testnet
 
-# Seed the ecosystem
+# Seed the ecosystem with 25 workers across 5 reputation profiles
 pnpm seed
 
-# Start all agents + explorer
+# Start all agents + message bus orchestration
 pnpm start
 
-# Open explorer
+# In a separate terminal — start the explorer UI
+cd packages/frontend && pnpm dev
+
+# Open the explorer
 open http://localhost:3000
+```
+
+### Demo (scripted 3-minute walkthrough)
+```bash
+pnpm demo
 ```
 
 ## Contract Addresses (0G Chain Testnet)
 
 | Contract | Address |
 |----------|---------|
-| ReputationOracle | `TBD after deploy` |
-| WorkerRegistry | `TBD after deploy` |
+| ReputationOracle | `0x19139CDE2d0da0B148bE69cD4261AA62B9d4F125` |
+| WorkerRegistry | `0xde94A743D06143b08E4B49E3812D570065BEdC51` |
+
+Chain ID: 16602 · RPC: `https://evmrpc-testnet.0g.ai` · Explorer: `https://chainscan-galileo.0g.ai`
 
 ## Project Structure
 

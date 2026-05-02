@@ -9,20 +9,27 @@
     "test": "turbo test",
     "typecheck": "turbo typecheck",
     "lint": "turbo lint",
-    "seed": "ts-node --esm scripts/seed.ts",
-    "start": "ts-node --esm scripts/orchestrator.ts",
-    "demo": "ts-node --esm scripts/demo.ts",
+    "seed": "tsx scripts/seed.ts",
+    "start": "tsx scripts/orchestrator.ts",
+    "demo": "tsx scripts/demo.ts",
     "clean": "turbo clean && rm -rf node_modules"
   },
   "devDependencies": {
+    "@types/node": "^20.0.0",
+    "dotenv": "^16.0.0",
+    "nanoid": "^5.0.0",
+    "ts-node": "^10.9.0",
+    "tsx": "^4.21.0",
     "turbo": "^2.0.0",
     "typescript": "^5.5.0",
-    "vitest": "^2.0.0",
-    "ts-node": "^10.9.0",
-    "@types/node": "^20.0.0"
+    "viem": "^2.20.0",
+    "vitest": "^2.0.0"
   },
   "packageManager": "pnpm@9.0.0",
   "engines": {
     "node": ">=20.0.0"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0"
   }
 }
