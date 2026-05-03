@@ -46,14 +46,14 @@ interface CustomTooltipProps {
 function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
   if (!active || !payload || payload.length === 0) return null
   return (
-    <div className="bg-[#1a1a1a] border border-[#333333] rounded-lg p-3 text-xs shadow-xl">
-      <p className="text-gray-400 mb-2">
+    <div style={{ background: '#000000', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 8, padding: '10px 12px', fontSize: 11, boxShadow: '0 8px 24px rgba(0,0,0,0.6)' }}>
+      <p style={{ color: 'var(--text-subtle)', marginBottom: 6, fontFamily: 'var(--font-mono)' }}>
         {label ? new Date(label).toLocaleString() : ''}
       </p>
       {payload.map((entry) => (
-        <div key={entry.name} className="flex justify-between gap-4" style={{ color: entry.color }}>
+        <div key={entry.name} className="flex justify-between gap-4" style={{ color: entry.color, fontFamily: 'var(--font-mono)' }}>
           <span className="capitalize">{entry.name}</span>
-          <span className="font-mono font-bold">{(entry.value / 100).toFixed(1)}%</span>
+          <span style={{ fontWeight: 600 }}>{(entry.value / 100).toFixed(1)}%</span>
         </div>
       ))}
     </div>
@@ -85,11 +85,19 @@ export default function ScoreTimeline({ address, timeRange: initialRange = '24h'
 
   const ranges: TimeRange[] = ['1h', '24h', '7d', 'all']
 
+  const wrapStyle = {
+    background: '#000000',
+    border: '1px solid rgba(255,255,255,0.1)',
+    borderRadius: 'var(--r-lg)',
+    boxShadow: '0 0 0 1px rgba(45,201,100,0.06) inset',
+    padding: '20px',
+  }
+
   if (isLoading) {
     return (
-      <div className="bg-[#111111] border border-[#222222] rounded-xl p-5">
-        <div className="flex items-center justify-center h-[280px] text-gray-500 text-sm">
-          Loading chart...
+      <div style={wrapStyle}>
+        <div className="flex items-center justify-center h-[280px] font-mono text-sm" style={{ color: 'var(--text-subtle)' }}>
+          Loading chart…
         </div>
       </div>
     )
@@ -97,8 +105,8 @@ export default function ScoreTimeline({ address, timeRange: initialRange = '24h'
 
   if (error) {
     return (
-      <div className="bg-[#111111] border border-[#222222] rounded-xl p-5">
-        <div className="flex items-center justify-center h-[280px] text-gray-500 text-sm">
+      <div style={wrapStyle}>
+        <div className="flex items-center justify-center h-[280px] font-mono text-sm" style={{ color: 'var(--text-subtle)' }}>
           No score history
         </div>
       </div>
@@ -106,19 +114,21 @@ export default function ScoreTimeline({ address, timeRange: initialRange = '24h'
   }
 
   return (
-    <div className="bg-[#111111] border border-[#222222] rounded-xl p-5">
+    <div style={wrapStyle}>
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-semibold text-gray-300">Score Timeline</h3>
+        <span className="eyebrow">Score Timeline</span>
         <div className="flex gap-1">
           {ranges.map((r) => (
             <button
               key={r}
               onClick={() => setRange(r)}
-              className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
-                range === r
-                  ? 'bg-[#333333] text-white'
-                  : 'text-gray-500 hover:text-gray-300'
-              }`}
+              className="font-mono text-[10px] uppercase tracking-[0.06em] transition-all duration-[120ms]"
+              style={{
+                padding: '3px 8px',
+                borderRadius: 'var(--r-xs)',
+                background: range === r ? 'rgba(45,201,100,0.12)' : 'transparent',
+                color: range === r ? 'var(--accent)' : 'var(--text-subtle)',
+              }}
             >
               {r === 'all' ? 'All' : r}
             </button>
@@ -127,7 +137,7 @@ export default function ScoreTimeline({ address, timeRange: initialRange = '24h'
       </div>
 
       {chartData.length === 0 ? (
-        <div className="flex items-center justify-center h-[280px] text-gray-500 text-sm">
+        <div className="flex items-center justify-center h-[280px] font-mono text-sm" style={{ color: 'var(--text-subtle)' }}>
           No score history
         </div>
       ) : (
@@ -136,22 +146,22 @@ export default function ScoreTimeline({ address, timeRange: initialRange = '24h'
             <XAxis
               dataKey="timestamp"
               tickFormatter={(v: number) => formatXAxis(v, range)}
-              tick={{ fill: '#6b7280', fontSize: 11 }}
-              axisLine={{ stroke: '#222222' }}
+              tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 11, fontFamily: 'var(--font-mono)' }}
+              axisLine={{ stroke: 'rgba(255,255,255,0.06)' }}
               tickLine={false}
               minTickGap={40}
             />
             <YAxis
               domain={[0, 10000]}
               tickFormatter={(v: number) => (v / 100).toFixed(0) + '%'}
-              tick={{ fill: '#6b7280', fontSize: 11 }}
+              tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 11, fontFamily: 'var(--font-mono)' }}
               axisLine={false}
               tickLine={false}
               width={40}
             />
             <Tooltip content={<CustomTooltip />} />
             <Legend
-              wrapperStyle={{ fontSize: '12px', color: '#9ca3af', paddingTop: '8px' }}
+              wrapperStyle={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', paddingTop: '8px', fontFamily: 'var(--font-mono)' }}
             />
             <Line
               type="monotone"

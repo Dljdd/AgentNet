@@ -1,11 +1,124 @@
+@import url('https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600,700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-body {
-  background-color: #0a0a0a;
-  color: #e5e7eb;
-  font-family: ui-sans-serif, system-ui, sans-serif;
+/* ── Semantic tokens (dark-first) ───────────────────────── */
+:root {
+  --bg:           #07080B;
+  --bg-raised:    #11141B;
+  --surface:      #161A23;
+  --bg-sunk:      #04050A;
+
+  --text:         #F2F4F7;
+  --text-muted:   #C8CDD8;
+  --text-subtle:  #8A94A6;
+
+  --border:       rgba(255,255,255,.07);
+  --border-strong:rgba(255,255,255,.14);
+
+  --accent:       #2DC964;   /* bio-400 */
+  --accent-2:     #8169D8;   /* lilac-400 */
+
+  --glow-bio:   0 0 0 1px rgba(45,201,100,.25), 0 0 32px rgba(45,201,100,.25);
+  --glow-lilac: 0 0 0 1px rgba(129,105,216,.25), 0 0 32px rgba(129,105,216,.25);
+
+  --r-xs:   4px;
+  --r-sm:   6px;
+  --r-md:   10px;
+  --r-lg:   14px;
+  --r-xl:   20px;
+  --r-pill: 999px;
 }
 
-.font-mono { font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace; }
+[data-theme="light"] {
+  --bg:           #FCFCFB;
+  --bg-raised:    #FFFFFF;
+  --surface:      #FFFFFF;
+  --bg-sunk:      #F6F7F8;
+  --text:         #07080B;
+  --text-muted:   #5A6378;
+  --text-subtle:  #7C8497;
+  --border:       rgba(11,13,18,.08);
+  --border-strong:rgba(11,13,18,.16);
+  --accent:       #19B254;   /* bio-500 */
+  --accent-2:     #6B53C9;   /* lilac-500 */
+}
+
+/* ── Base resets ─────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans, 'General Sans', ui-sans-serif, system-ui, sans-serif);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Typography utilities ────────────────────────────────── */
+.font-display { font-family: var(--font-display, 'Instrument Serif', 'Times New Roman', serif); }
+.font-sans    { font-family: var(--font-sans, 'General Sans', ui-sans-serif, sans-serif); }
+.font-mono    { font-family: var(--font-mono, 'JetBrains Mono', ui-monospace, monospace); }
+
+/* Eyebrow: mono uppercase with wide tracking */
+.eyebrow {
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #8A94A6;
+}
+
+/* ── Live badge pulse (1.6s, 2-step) ─────────────────────── */
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.2; }
+}
+
+.pulse-dot {
+  animation: pulse-dot 1.6s ease-in-out infinite;
+}
+
+/* ── Status badge tick ───────────────────────────────────── */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-mono, monospace);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border-radius: 2px;
+  padding: 2px 6px 2px 4px;
+  background: transparent;
+  border: 1px solid var(--border);
+}
+
+.status-badge .tick {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ── Glow utilities ──────────────────────────────────────── */
+.glow-bio   { box-shadow: var(--glow-bio); }
+.glow-lilac { box-shadow: var(--glow-lilac); }
+
+/* ── Motion: respect prefers-reduced-motion ──────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.1ms !important;
+  }
+}
+
+/* ── Scrollbar (dark surfaces) ───────────────────────────── */
+::-webkit-scrollbar       { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 999px; }
