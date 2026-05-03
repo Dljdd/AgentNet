@@ -115,10 +115,10 @@ See [AGENTS.md](./AGENTS.md) for instructions on using coding agents to build mo
 
 ## Team
 
-### Dylan Moraes — [𝕏](https://x.com/dylowisp) | [Telegram](https://t.me/dylanmoraes)
-### Dhananjay Joshi — [𝕏](https://x.com/DhananjayBUIDL) | [Telegram](https://t.me/DhananjayBUIDL)
-### Rahul Biradar — [𝕏](https://x.com/rahulbiradar_) | [Telegram](https://t.me/Rahulbiradar06)
-### Rakesh Kumawat — [𝕏](https://x.com/RakeshKumawattt) | [Telegram](https://t.me/RakeshWeb3)
+#### Dylan Moraes — [𝕏](https://x.com/dylowisp) | [Telegram](https://t.me/dylanmoraes)
+#### Dhananjay Joshi — [𝕏](https://x.com/DhananjayBUIDL) | [Telegram](https://t.me/DhananjayBUIDL)
+#### Rahul Biradar — [𝕏](https://x.com/rahulbiradar_) | [Telegram](https://t.me/Rahulbiradar06)
+#### Rakesh Kumawat — [𝕏](https://x.com/RakeshKumawattt) | [Telegram](https://t.me/RakeshWeb3)
 
 Built for ETHGlobal OpenAgents 2026.
 
