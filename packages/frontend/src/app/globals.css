@@ -11,9 +11,9 @@
   --surface:      #161A23;
   --bg-sunk:      #04050A;
 
-  --text:         #ECEEF1;
-  --text-muted:   #A0A7B6;
-  --text-subtle:  #5A6378;
+  --text:         #F2F4F7;
+  --text-muted:   #C8CDD8;
+  --text-subtle:  #8A94A6;
 
   --border:       rgba(255,255,255,.07);
   --border-strong:rgba(255,255,255,.14);
@@ -69,7 +69,7 @@ body {
   font-weight: 500;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--text-subtle);
+  color: #8A94A6;
 }
 
 /* ── Live badge pulse (1.6s, 2-step) ─────────────────────── */

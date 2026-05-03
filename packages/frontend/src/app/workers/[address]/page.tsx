@@ -1,10 +1,11 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import useSWR from 'swr'
 import ScoreTimeline from '@/components/ScoreTimeline'
+import logoImg from '@/assets/logo.jpeg'
 
 type AgentStatus = 'idle' | 'working' | 'error' | 'offline'
 type TaskType = 'pool-indexer' | 'wallet-summarizer' | 'token-fact-checker'
@@ -54,13 +55,28 @@ function scoreAccentColor(score: number): string {
   return '#F26B61'
 }
 
+const PROFILE_IMAGES = [1, 2, 3, 4, 5, 6, 7, 8, 9].map(
+  (n) => require(`@/assets/Profileimg/${n}.png`)
+)
+
+function getProfileImage(address: string) {
+  const idx = parseInt(address.slice(-4), 16) % PROFILE_IMAGES.length
+  return PROFILE_IMAGES[idx]
+}
+
+const cardStyle = {
+  background: '#000000',
+  borderColor: 'rgba(255,255,255,0.1)',
+  borderRadius: 'var(--r-lg)',
+  boxShadow: '0 0 0 1px rgba(45,201,100,0.06) inset',
+}
+
 interface WorkerDetailPageProps {
   params: { address: string }
 }
 
 export default function WorkerDetailPage({ params }: WorkerDetailPageProps) {
   const { address } = params
-  const router = useRouter()
   const [copied, setCopied] = useState(false)
 
   const { data: workersData, isLoading } = useSWR<WorkerListItem[]>('/api/workers', fetcher, {
@@ -77,11 +93,52 @@ export default function WorkerDetailPage({ params }: WorkerDetailPageProps) {
     })
   }
 
+  /* ── Navbar (shared) ──────────────────────────────── */
+  const Navbar = (
+    <nav
+      className="sticky top-0 z-50 border-b backdrop-blur-sm"
+      style={{ background: 'rgba(0,0,0,0.8)', borderColor: 'rgba(255,255,255,0.07)' }}
+    >
+      <div className="max-w-6xl mx-auto px-6 h-14 flex items-center gap-3">
+        <Link href="/" className="flex items-center gap-2">
+          <Image src={logoImg} alt="AgentNet logo" width={28} height={28} className="rounded-md" />
+          <span className="text-xl" style={{ fontFamily: 'var(--font-logo)' }}>
+            Agent<span style={{ color: 'var(--accent)' }}>Net</span>
+          </span>
+        </Link>
+        <span className="font-mono text-xs" style={{ color: 'rgba(255,255,255,0.2)' }}>/</span>
+        <Link
+          href="/explorer"
+          className="font-mono text-xs transition-colors"
+          style={{ color: 'var(--text-subtle)' }}
+          onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--text-muted)')}
+          onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-subtle)')}
+        >
+          Explorer
+        </Link>
+        <span className="font-mono text-xs" style={{ color: 'rgba(255,255,255,0.2)' }}>/</span>
+        <span
+          className="hidden sm:block font-mono text-xs px-2 py-0.5 rounded"
+          style={{
+            color: 'var(--text-subtle)',
+            background: 'rgba(255,255,255,0.05)',
+            border: '1px solid rgba(255,255,255,0.08)',
+          }}
+        >
+          Worker Detail
+        </span>
+      </div>
+    </nav>
+  )
+
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg)' }}>
-        <div className="font-mono text-sm" style={{ color: 'var(--text-subtle)' }}>
-          Loading worker data…
+      <div className="min-h-screen" style={{ background: '#000000', color: 'var(--text)' }}>
+        {Navbar}
+        <div className="flex items-center justify-center py-32">
+          <div className="font-mono text-sm" style={{ color: 'var(--text-subtle)' }}>
+            Loading worker data…
+          </div>
         </div>
       </div>
     )
@@ -89,21 +146,11 @@ export default function WorkerDetailPage({ params }: WorkerDetailPageProps) {
 
   if (!worker) {
     return (
-      <div className="min-h-screen" style={{ background: 'var(--bg)', color: 'var(--text)' }}>
-        <div className="max-w-4xl mx-auto px-5 py-8">
-          <button
-            onClick={() => router.back()}
-            className="font-sans text-sm transition-colors mb-8 flex items-center gap-1"
-            style={{ color: 'var(--text-subtle)' }}
-            onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--text-muted)')}
-            onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-subtle)')}
-          >
-            ← All Workers
-          </button>
-          <div className="flex flex-col items-center justify-center py-20" style={{ color: 'var(--text-subtle)' }}>
-            <p className="font-sans text-base mb-1">Worker not found.</p>
-            <p className="font-mono text-xs">{address}</p>
-          </div>
+      <div className="min-h-screen" style={{ background: '#000000', color: 'var(--text)' }}>
+        {Navbar}
+        <div className="max-w-6xl mx-auto px-6 py-20 flex flex-col items-center justify-center" style={{ color: 'var(--text-subtle)' }}>
+          <p className="font-sans text-base mb-1">Worker not found.</p>
+          <p className="font-mono text-xs">{address}</p>
         </div>
       </div>
     )
@@ -111,61 +158,36 @@ export default function WorkerDetailPage({ params }: WorkerDetailPageProps) {
 
   const { score } = worker
   const status = statusConfig[worker.status]
-  const compositeStr = (score.composite / 10000).toFixed(3)
+  const profileImg = getProfileImage(address)
 
   const gauges = [
-    { label: 'Accuracy',   value: score.accuracy,   description: 'Task result correctness', weight: '50%', accentLilac: false },
-    { label: 'Timeliness', value: score.timeliness,  description: 'Delivery within deadline', weight: '30%', accentLilac: false },
-    { label: 'Uptime',     value: score.uptime,      description: 'Availability over time',  weight: '20%', accentLilac: false },
-    { label: 'Composite',  value: score.composite,   description: 'acc 50% · tim 30% · upt 20%', weight: '—', accentLilac: true },
+    { label: 'Accuracy',   value: score.accuracy,   description: 'Task result correctness',     accentLilac: false },
+    { label: 'Timeliness', value: score.timeliness,  description: 'Delivery within deadline',    accentLilac: false },
+    { label: 'Uptime',     value: score.uptime,      description: 'Availability over time',      accentLilac: false },
+    { label: 'Composite',  value: score.composite,   description: 'acc 50% · tim 30% · upt 20%', accentLilac: true },
   ] as const
 
   return (
-    <div className="min-h-screen" style={{ background: 'var(--bg)', color: 'var(--text)' }}>
+    <div className="min-h-screen" style={{ background: '#000000', color: 'var(--text)' }}>
+      {Navbar}
 
-      {/* ── Header ──────────────────────────────────────── */}
-      <header
-        className="sticky top-0 z-20 border-b backdrop-blur-sm"
-        style={{
-          background: 'rgba(7,8,11,0.92)',
-          borderColor: 'var(--border)',
-        }}
-      >
-        <div className="max-w-4xl mx-auto px-5 h-14 flex items-center gap-3">
-          <Link
-            href="/explorer"
-            className="font-sans text-sm transition-colors flex items-center gap-1.5"
-            style={{ color: 'var(--text-subtle)' }}
-            onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--text-muted)')}
-            onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-subtle)')}
-          >
-            ← Explorer
-          </Link>
-          <span className="font-mono text-xs" style={{ color: 'var(--border-strong)' }}>|</span>
-          <span className="eyebrow">Worker Detail</span>
-        </div>
-      </header>
+      <div className="max-w-6xl mx-auto px-6 py-6 space-y-5">
 
-      <div className="max-w-4xl mx-auto px-5 py-6 space-y-5">
-
-        {/* ── Worker header card ────────────────────────── */}
-        <div
-          className="p-5 border"
-          style={{
-            background: 'var(--surface)',
-            borderColor: 'var(--border)',
-            borderRadius: 'var(--r-lg)',
-          }}
-        >
+        {/* ── Worker header card ──────────────────────────── */}
+        <div className="p-5 border" style={cardStyle}>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex items-center gap-4">
               {/* Avatar */}
-              <div
-                className="w-12 h-12 rounded-full flex-shrink-0"
-                style={{ background: 'linear-gradient(135deg, var(--accent), var(--accent-2))' }}
-              />
+              <div className="w-14 h-14 rounded-full flex-shrink-0 overflow-hidden">
+                <Image
+                  src={profileImg}
+                  alt="agent avatar"
+                  width={56}
+                  height={56}
+                  className="w-full h-full object-cover"
+                />
+              </div>
               <div>
-                {/* Status badge */}
                 <div className="mb-1.5">
                   <span
                     className="status-badge"
@@ -182,7 +204,6 @@ export default function WorkerDetailPage({ params }: WorkerDetailPageProps) {
                     {status.label}
                   </span>
                 </div>
-                {/* Full address */}
                 <div className="flex items-center gap-2">
                   <span
                     className="font-mono text-sm break-all"
@@ -228,7 +249,7 @@ export default function WorkerDetailPage({ params }: WorkerDetailPageProps) {
           </div>
         </div>
 
-        {/* ── Score gauges ──────────────────────────────── */}
+        {/* ── Score gauges ────────────────────────────────── */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {gauges.map((gauge) => {
             const accent = scoreAccentColor(gauge.value)
@@ -240,10 +261,12 @@ export default function WorkerDetailPage({ params }: WorkerDetailPageProps) {
                 key={gauge.label}
                 className="p-4 border"
                 style={{
-                  background: 'var(--surface)',
-                  borderColor: gauge.accentLilac ? 'rgba(129,105,216,0.3)' : 'var(--border)',
+                  background: '#000000',
+                  borderColor: gauge.accentLilac ? 'rgba(129,105,216,0.3)' : 'rgba(255,255,255,0.1)',
                   borderRadius: 'var(--r-lg)',
-                  boxShadow: gauge.accentLilac ? 'var(--glow-lilac)' : 'none',
+                  boxShadow: gauge.accentLilac
+                    ? '0 0 0 1px rgba(129,105,216,0.08) inset'
+                    : '0 0 0 1px rgba(45,201,100,0.06) inset',
                 }}
               >
                 <div className="eyebrow mb-1.5">{gauge.label}</div>
@@ -268,40 +291,29 @@ export default function WorkerDetailPage({ params }: WorkerDetailPageProps) {
           })}
         </div>
 
-        {/* ── Score Timeline ────────────────────────────── */}
+        {/* ── Score Timeline ───────────────────────────────── */}
         <ScoreTimeline address={address} />
 
-        {/* ── Worker info table ─────────────────────────── */}
-        <div
-          className="border overflow-hidden"
-          style={{
-            background: 'var(--surface)',
-            borderColor: 'var(--border)',
-            borderRadius: 'var(--r-lg)',
-          }}
-        >
-          {/* Table header */}
+        {/* ── Worker info table ────────────────────────────── */}
+        <div className="border overflow-hidden" style={cardStyle}>
           <div
             className="px-5 py-3 border-b"
-            style={{ background: 'var(--bg-sunk)', borderColor: 'var(--border)' }}
+            style={{ background: '#000000', borderColor: 'rgba(255,255,255,0.08)' }}
           >
             <span className="eyebrow">Worker Info</span>
           </div>
-          {/* Rows */}
           <div>
             {[
-              { label: 'Fee Per Job', value: `${worker.feePerTask} OG`, mono: false },
-              { label: 'Total Jobs', value: score.totalJobs.toLocaleString(), mono: false },
-              { label: 'Capabilities', value: worker.capabilities.join(', '), mono: false },
-              { label: 'Last Updated', value: timeAgo(score.lastUpdated), mono: false },
-              { label: 'Address', value: address, mono: true },
+              { label: 'Fee Per Job',   value: `${worker.feePerTask} OG`,         mono: false },
+              { label: 'Total Jobs',    value: score.totalJobs.toLocaleString(),   mono: false },
+              { label: 'Capabilities', value: worker.capabilities.join(', '),      mono: false },
+              { label: 'Last Updated', value: timeAgo(score.lastUpdated),          mono: false },
+              { label: 'Address',      value: address,                             mono: true },
             ].map((row, i, arr) => (
               <div
                 key={row.label}
                 className="flex justify-between gap-4 px-5 py-3 border-b text-sm"
-                style={{
-                  borderColor: i === arr.length - 1 ? 'transparent' : 'var(--border)',
-                }}
+                style={{ borderColor: i === arr.length - 1 ? 'transparent' : 'rgba(255,255,255,0.06)' }}
               >
                 <span
                   className="font-mono text-[11px] uppercase tracking-[0.06em] flex-shrink-0"
@@ -320,17 +332,18 @@ export default function WorkerDetailPage({ params }: WorkerDetailPageProps) {
           </div>
         </div>
 
-        {/* ── Recent Activity ───────────────────────────── */}
+        {/* ── Recent Activity ──────────────────────────────── */}
         <div>
           <div className="eyebrow mb-3">Recent Activity</div>
           <ActivityFeedForAddress address={address} />
         </div>
+
       </div>
     </div>
   )
 }
 
-/* Filtered activity for this worker */
+/* ── Filtered activity feed for this worker ─────────── */
 function ActivityFeedForAddress({ address }: { address: string }) {
   interface ActivityEvent {
     id: string
@@ -364,18 +377,22 @@ function ActivityFeedForAddress({ address }: { address: string }) {
     return `${Math.floor(s / 3600)}h ago`
   }
 
+  const cardStyle = {
+    background: '#000000',
+    borderColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 'var(--r-lg)',
+    boxShadow: '0 0 0 1px rgba(45,201,100,0.06) inset',
+  }
+
   if (isLoading) {
     return (
-      <div
-        className="border p-4 space-y-3 animate-pulse"
-        style={{ background: 'var(--surface)', borderColor: 'var(--border)', borderRadius: 'var(--r-lg)' }}
-      >
+      <div className="border p-4 space-y-3 animate-pulse" style={cardStyle}>
         {[1, 2].map((i) => (
           <div key={i} className="flex gap-3">
-            <div className="w-2 h-2 rounded-full mt-1.5" style={{ background: 'var(--border-strong)' }} />
+            <div className="w-2 h-2 rounded-full mt-1.5" style={{ background: 'rgba(255,255,255,0.08)' }} />
             <div className="flex-1">
-              <div className="h-2.5 rounded w-3/4 mb-2" style={{ background: 'var(--border-strong)' }} />
-              <div className="h-2 rounded w-1/2" style={{ background: 'var(--border)' }} />
+              <div className="h-2.5 rounded w-3/4 mb-2" style={{ background: 'rgba(255,255,255,0.08)' }} />
+              <div className="h-2 rounded w-1/2" style={{ background: 'rgba(255,255,255,0.05)' }} />
             </div>
           </div>
         ))}
@@ -387,12 +404,7 @@ function ActivityFeedForAddress({ address }: { address: string }) {
     return (
       <div
         className="border p-6 text-center font-sans text-sm"
-        style={{
-          background: 'var(--surface)',
-          borderColor: 'var(--border)',
-          borderRadius: 'var(--r-lg)',
-          color: 'var(--text-subtle)',
-        }}
+        style={{ ...cardStyle, color: 'var(--text-subtle)' }}
       >
         No activity yet for this worker.
       </div>
@@ -400,11 +412,8 @@ function ActivityFeedForAddress({ address }: { address: string }) {
   }
 
   return (
-    <div
-      className="border overflow-hidden"
-      style={{ background: 'var(--surface)', borderColor: 'var(--border)', borderRadius: 'var(--r-lg)' }}
-    >
-      <div className="max-h-72 overflow-y-auto divide-y" style={{ borderColor: 'var(--border)' }}>
+    <div className="border overflow-hidden" style={cardStyle}>
+      <div className="max-h-72 overflow-y-auto divide-y" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
         {filtered.map((event) => (
           <div
             key={event.id}

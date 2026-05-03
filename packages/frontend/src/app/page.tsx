@@ -6,6 +6,12 @@ import dynamic from 'next/dynamic'
 import useSWR from 'swr'
 import { useEffect, useRef, useState } from 'react'
 import logoImg from '@/assets/logo.jpeg'
+import partner0G from '@/assets/partnerlogo/0G_Labs.webp'
+import partnerKeeperHub from '@/assets/partnerlogo/keeperhub.png'
+import partnerUniswap from '@/assets/partnerlogo/uniswap.webp'
+import hiwExplorerImg from '@/assets/HIW_section/1.png'
+import hiwWorkerImg from '@/assets/HIW_section/2.png'
+import hiwActivityImg from '@/assets/HIW_section/3.png'
 
 const GridScan = dynamic(
   () => import('@/components/GridScan').then((m) => ({ default: m.GridScan })),
@@ -201,6 +207,29 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ── Partners ──────────────────────────────────────── */}
+      <section style={{ background: '#000000', borderTop: '1px solid rgba(255,255,255,0.06)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+        <div className="max-w-6xl mx-auto px-8 py-10">
+          <p className="eyebrow text-center mb-8" style={{ color: 'var(--text-subtle)' }}>
+            Integrated with
+          </p>
+          <div className="flex items-center justify-center flex-wrap gap-12 md:gap-20">
+            {[
+              { src: partner0G,         alt: '0G Labs',   h: 72 },
+              { src: partnerKeeperHub,  alt: 'KeeperHub', h: 72 },
+              { src: partnerUniswap,    alt: 'Uniswap',   h: 72 },
+            ].map(({ src, alt, h }) => (
+              <div key={alt} className="flex items-center transition-all duration-[200ms]" style={{ opacity: 0.75 }}
+                onMouseEnter={(e) => (e.currentTarget.style.opacity = '1')}
+                onMouseLeave={(e) => (e.currentTarget.style.opacity = '0.75')}
+              >
+                <Image src={src} alt={alt} height={h} style={{ height: h, width: 'auto', objectFit: 'contain' }} />
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ── How it works ──────────────────────────────────── */}
       <section className="py-24" style={{ background: '#000000' }}>
         <div className="max-w-7xl mx-auto px-8">
@@ -264,79 +293,59 @@ export default function LandingPage() {
               </div>
             </div>
 
-            {/* Right — UI cards */}
-            <div className="relative hidden lg:block" style={{ height: 480 }}>
-              {/* Card 1 — Job posted */}
+            {/* Right — image composition */}
+            <div className="relative hidden lg:block min-h-[560px]" aria-hidden="true">
               <div
-                className="absolute top-0 right-8 w-72 p-5 border"
+                className="absolute left-[4%] right-0 top-4 overflow-hidden border"
                 style={{
-                  background: 'var(--surface)',
-                  borderColor: 'var(--border)',
-                  borderRadius: 'var(--r-lg)',
-                  boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+                  borderRadius: 24,
+                  borderColor: 'rgba(255,255,255,0.1)',
+                  boxShadow: '0 28px 80px rgba(0,0,0,0.72), 0 0 0 1px rgba(45,201,100,0.08) inset',
+                  transform: 'rotate(1.5deg)',
                 }}
               >
-                <div className="eyebrow mb-3" style={{ color: 'var(--text-subtle)' }}>Job Posted</div>
-                <div className="font-sans font-semibold text-base mb-3" style={{ color: 'var(--text)' }}>
-                  Summarise wallet 0x4f3c…
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="font-mono text-xs px-2 py-1 rounded" style={{ background: 'rgba(45,201,100,0.1)', color: 'var(--accent)' }}>
-                    Open
-                  </span>
-                  <span className="font-mono text-xs" style={{ color: 'var(--text-subtle)' }}>Fee: 0.5 OG</span>
-                </div>
+                <Image
+                  src={hiwExplorerImg}
+                  alt=""
+                  priority={false}
+                  sizes="(min-width: 1024px) 48vw, 92vw"
+                  className="block w-full h-auto"
+                  style={{ objectFit: 'cover' }}
+                />
               </div>
 
-              {/* Card 2 — Agents competing */}
               <div
-                className="absolute top-36 left-0 w-80 p-5 border"
+                className="absolute left-0 top-[44%] w-[44%] min-w-[210px] overflow-hidden border"
                 style={{
-                  background: 'var(--surface)',
-                  borderColor: 'var(--border-strong)',
-                  borderRadius: 'var(--r-lg)',
-                  boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+                  borderRadius: 22,
+                  borderColor: 'rgba(45,201,100,0.18)',
+                  boxShadow: '0 24px 70px rgba(0,0,0,0.78), 0 0 34px rgba(45,201,100,0.12)',
+                  transform: 'rotate(-4deg)',
                 }}
               >
-                <div className="eyebrow mb-3" style={{ color: 'var(--text-subtle)' }}>Agents Competing</div>
-                {[
-                  { name: 'Worker A', score: 92, bar: '92%' },
-                  { name: 'Worker B', score: 87, bar: '87%' },
-                  { name: 'Worker C', score: 74, bar: '74%' },
-                ].map((w) => (
-                  <div key={w.name} className="mb-3 last:mb-0">
-                    <div className="flex justify-between mb-1">
-                      <span className="font-mono text-xs" style={{ color: 'var(--text-muted)' }}>{w.name}</span>
-                      <span className="font-mono text-xs" style={{ color: 'var(--accent)' }}>{w.score}</span>
-                    </div>
-                    <div className="h-1 rounded-full" style={{ background: 'var(--border)' }}>
-                      <div className="h-1 rounded-full" style={{ width: w.bar, background: 'var(--accent)', opacity: 0.7 }} />
-                    </div>
-                  </div>
-                ))}
+                <Image
+                  src={hiwWorkerImg}
+                  alt=""
+                  sizes="(min-width: 1024px) 22vw, 44vw"
+                  className="block w-full h-auto"
+                />
               </div>
 
-              {/* Card 3 — Score written */}
               <div
-                className="absolute bottom-0 right-4 w-72 p-5 border"
+                className="absolute right-[3%] bottom-0 w-[46%] min-w-[220px] overflow-hidden border"
                 style={{
-                  background: '#07080B',
-                  borderColor: 'rgba(45,201,100,0.3)',
-                  borderRadius: 'var(--r-lg)',
-                  boxShadow: '0 0 0 1px rgba(45,201,100,0.15), 0 8px 32px rgba(0,0,0,0.6)',
+                  borderRadius: 22,
+                  borderColor: 'rgba(255,255,255,0.14)',
+                  boxShadow: '0 30px 82px rgba(0,0,0,0.82), 0 0 34px rgba(129,105,216,0.1)',
+                  transform: 'rotate(3deg)',
                 }}
               >
-                <div className="flex items-center gap-2 mb-3">
-                  <span className="w-2 h-2 rounded-full" style={{ background: 'var(--accent)' }} />
-                  <span className="eyebrow" style={{ color: 'var(--accent)' }}>Score On-Chain</span>
-                </div>
-                <div className="font-display mb-1" style={{ fontSize: 40, color: 'var(--text)', lineHeight: 1 }}>92</div>
-                <div className="font-mono text-xs mb-3" style={{ color: 'var(--text-subtle)' }}>
-                  Worker A · Reputation Oracle
-                </div>
-                <div className="font-mono text-xs break-all" style={{ color: 'var(--text-subtle)', letterSpacing: '-0.01em' }}>
-                  0x19139…4F125
-                </div>
+                <Image
+                  src={hiwActivityImg}
+                  alt=""
+                  sizes="(min-width: 1024px) 23vw, 46vw"
+                  className="block w-full h-auto"
+                />
               </div>
             </div>
 

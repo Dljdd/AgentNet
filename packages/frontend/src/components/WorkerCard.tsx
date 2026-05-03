@@ -1,6 +1,16 @@
 'use client'
 
 import { useState } from 'react'
+import Image from 'next/image'
+
+const PROFILE_IMAGES = [1,2,3,4,5,6,7,8,9].map(
+  (n) => require(`@/assets/Profileimg/${n}.png`)
+)
+
+function getProfileImage(address: string) {
+  const idx = parseInt(address.slice(-4), 16) % PROFILE_IMAGES.length
+  return PROFILE_IMAGES[idx]
+}
 
 type AgentStatus = 'idle' | 'working' | 'error' | 'offline'
 type TaskType = 'pool-indexer' | 'wallet-summarizer' | 'token-fact-checker'
@@ -71,6 +81,7 @@ export default function WorkerCard({ worker, onClick }: WorkerCardProps) {
   }
 
   const status = statusConfig[worker.status]
+  const profileImg = getProfileImage(worker.address)
   const accentColor = scoreAccentColor(worker.score.composite)
   const scoreStr = (worker.score.composite / 10000).toFixed(3)
   const [intPart, decPart] = scoreStr.split('.')
@@ -80,17 +91,18 @@ export default function WorkerCard({ worker, onClick }: WorkerCardProps) {
       onClick={onClick}
       className="cursor-pointer border transition-all duration-[120ms] ease-[cubic-bezier(0.2,0.8,0.2,1)]"
       style={{
-        background: 'var(--surface)',
-        borderColor: 'var(--border)',
+        background: '#000000',
+        borderColor: 'rgba(255,255,255,0.1)',
         borderRadius: 'var(--r-lg)',
         padding: '20px',
+        boxShadow: '0 0 0 1px rgba(45,201,100,0.06) inset',
       }}
       onMouseEnter={(e) => {
-        ;(e.currentTarget as HTMLElement).style.borderColor = 'var(--border-strong)'
+        ;(e.currentTarget as HTMLElement).style.borderColor = 'rgba(45,201,100,0.3)'
         ;(e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)'
       }}
       onMouseLeave={(e) => {
-        ;(e.currentTarget as HTMLElement).style.borderColor = 'var(--border)'
+        ;(e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.1)'
         ;(e.currentTarget as HTMLElement).style.transform = 'translateY(0)'
       }}
     >
@@ -98,12 +110,15 @@ export default function WorkerCard({ worker, onClick }: WorkerCardProps) {
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-3">
           {/* Avatar */}
-          <div
-            className="w-11 h-11 rounded-full flex-shrink-0"
-            style={{
-              background: 'linear-gradient(135deg, var(--accent), var(--accent-2))',
-            }}
-          />
+          <div className="w-11 h-11 rounded-full flex-shrink-0 overflow-hidden">
+            <Image
+              src={profileImg}
+              alt="agent avatar"
+              width={44}
+              height={44}
+              className="w-full h-full object-cover"
+            />
+          </div>
           <div>
             <div className="font-mono text-sm" style={{ color: 'var(--text)', letterSpacing: '-0.01em' }}>
               {formatAddr(worker.address)}

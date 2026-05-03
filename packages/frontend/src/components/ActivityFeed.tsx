@@ -69,15 +69,16 @@ export default function ActivityFeed({ filter: initialFilter = 'all', maxItems =
     <div
       className="border overflow-hidden"
       style={{
-        background: 'var(--surface)',
-        borderColor: 'var(--border)',
+        background: '#000000',
+        borderColor: 'rgba(255,255,255,0.1)',
         borderRadius: 'var(--r-lg)',
+        boxShadow: '0 0 0 1px rgba(45,201,100,0.06) inset',
       }}
     >
       {/* Header */}
       <div
         className="px-4 py-3 border-b flex items-center justify-between"
-        style={{ borderColor: 'var(--border)', background: 'var(--bg-sunk)' }}
+        style={{ borderColor: 'rgba(255,255,255,0.08)', background: '#000000' }}
       >
         <span className="eyebrow">Activity Feed</span>
         <div className="flex gap-1">
@@ -89,8 +90,8 @@ export default function ActivityFeed({ filter: initialFilter = 'all', maxItems =
               style={{
                 padding: '3px 8px',
                 borderRadius: 'var(--r-xs)',
-                background: activeFilter === tab.key ? 'var(--border-strong)' : 'transparent',
-                color: activeFilter === tab.key ? 'var(--text)' : 'var(--text-subtle)',
+                background: activeFilter === tab.key ? 'rgba(45,201,100,0.12)' : 'transparent',
+                color: activeFilter === tab.key ? 'var(--accent)' : 'var(--text-subtle)',
               }}
             >
               {tab.label}
@@ -108,12 +109,12 @@ export default function ActivityFeed({ filter: initialFilter = 'all', maxItems =
                 key={i}
                 className="py-3 px-4 flex items-start gap-3 animate-pulse"
               >
-                <div className="w-2 h-2 rounded-full mt-1.5 flex-shrink-0" style={{ background: 'var(--border-strong)' }} />
+                <div className="w-2 h-2 rounded-full mt-1.5 flex-shrink-0" style={{ background: 'rgba(255,255,255,0.08)' }} />
                 <div className="flex-1">
-                  <div className="h-2.5 rounded w-3/4 mb-2" style={{ background: 'var(--border-strong)' }} />
-                  <div className="h-2 rounded w-1/2" style={{ background: 'var(--border)' }} />
+                  <div className="h-2.5 rounded w-3/4 mb-2" style={{ background: 'rgba(255,255,255,0.08)' }} />
+                  <div className="h-2 rounded w-1/2" style={{ background: 'rgba(255,255,255,0.05)' }} />
                 </div>
-                <div className="h-2 rounded w-8" style={{ background: 'var(--border)' }} />
+                <div className="h-2 rounded w-8" style={{ background: 'rgba(255,255,255,0.05)' }} />
               </div>
             ))}
           </>
