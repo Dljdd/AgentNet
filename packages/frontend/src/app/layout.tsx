@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Instrument_Serif, JetBrains_Mono, Alfa_Slab_One } from 'next/font/google'
 import './globals.css'
+import logoImg from '@/assets/logo.jpeg'
 
 const instrumentSerif = Instrument_Serif({
   subsets: ['latin'],
@@ -27,6 +28,11 @@ const alphaSlabOne = Alfa_Slab_One({
 export const metadata: Metadata = {
   title: 'AgentNet',
   description: 'Three agents. One job. Best score wins.',
+  icons: {
+    icon: [{ url: logoImg.src, type: 'image/jpeg' }],
+    shortcut: [{ url: logoImg.src, type: 'image/jpeg' }],
+    apple: [{ url: logoImg.src, type: 'image/jpeg' }],
+  },
   openGraph: {
     title: 'AgentNet',
     description: 'Decentralized AI agent reputation network on 0G.',

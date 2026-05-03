@@ -181,29 +181,6 @@ export default function LandingPage() {
             </Link>
           </div>
 
-          {/* Live stat chips */}
-          <div className="flex flex-wrap gap-3 justify-center">
-            {[
-              { label: 'Workers online', value: stats?.totalWorkers?.toString() ?? '—' },
-              { label: 'Jobs completed', value: stats?.totalTasks?.toLocaleString() ?? '—' },
-              { label: 'Avg reputation', value: avgRepPct },
-              { label: 'Fees settled', value: stats?.totalFees ? `${stats.totalFees} OG` : '—' },
-            ].map((chip) => (
-              <div
-                key={chip.label}
-                className="flex items-center gap-2 px-4 py-2 border font-mono text-sm"
-                style={{
-                  borderColor: 'var(--border)',
-                  borderRadius: 'var(--r-pill)',
-                  background: 'rgba(45,201,100,0.04)',
-                }}
-              >
-                <span className="w-1.5 h-1.5 rounded-full pulse-dot" style={{ background: 'var(--accent)' }} />
-                <span style={{ color: 'var(--text-subtle)' }}>{chip.label}</span>
-                <span style={{ color: 'var(--text)' }} className="font-medium">{chip.value}</span>
-              </div>
-            ))}
-          </div>
         </div>
       </section>
 
