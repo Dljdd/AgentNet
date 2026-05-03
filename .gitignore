@@ -40,3 +40,4 @@ npm-debug.log*
 
 .claude/
 .claude/*   
+*.tsbuildinfo
