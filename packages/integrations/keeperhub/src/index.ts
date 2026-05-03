@@ -20,10 +20,18 @@ import type { PaymentReceipt } from "@agentnet/types";
 
 // ─── Workflow IDs ─────────────────────────────────────────────────────────────
 
-/** Stable workflow IDs provisioned in the AgentNet KeeperHub organisation. */
+/**
+ * Stable workflow IDs provisioned in the AgentNet KeeperHub organisation.
+ *
+ * reputationUpdate — two variants:
+ *   sepolia  (gtpk3bflrnoihktuoa8ci) — Ethereum Sepolia, chain 11155111, verified working
+ *   0g       (lza9g0c0dviu5mu0we7j2) — 0G Galileo, chain 16602 (Para MPC writes pending KeeperHub support)
+ *
+ * Default is Sepolia for reliable demo execution; override via env vars.
+ */
 export const WORKFLOW_IDS = {
   reputationUpdate:
-    process.env.KEEPERHUB_REPUTATION_WORKFLOW_ID ?? "lza9g0c0dviu5mu0we7j2",
+    process.env.KEEPERHUB_REPUTATION_WORKFLOW_ID ?? "gtpk3bflrnoihktuoa8ci",
   paymentSettle:
     process.env.KEEPERHUB_PAYMENT_WORKFLOW_ID ?? "qpkwci7tw0dr3dlnjv0d6",
 } as const;
@@ -61,6 +69,13 @@ interface ExecutionStatusResponse {
     completedSteps: number;
     runningSteps: number;
     percentage: number;
+    [key: string]: unknown;
+  };
+  // Top-level output written by KeeperHub after a successful write-contract or transfer action.
+  output?: {
+    success?: boolean;
+    transactionHash?: string;
+    transactionLink?: string;
     [key: string]: unknown;
   };
 }
@@ -119,7 +134,8 @@ export class KeeperHubClient {
       "https://app.keeperhub.com";
     this.apiKey = options?.apiKey ?? process.env.KEEPERHUB_API_KEY ?? "";
     this.pollIntervalMs = options?.pollIntervalMs ?? 3_000;
-    this.timeoutMs = options?.timeoutMs ?? 120_000;
+    // 0G Galileo testnet can take 3-5 min per tx; 300 s covers typical congestion.
+    this.timeoutMs = options?.timeoutMs ?? 300_000;
   }
 
   /**
@@ -210,21 +226,41 @@ export class KeeperHubClient {
     const { executionId } = await this.executeWorkflow(workflowId, input);
     const execution = await this.waitForExecution(executionId);
 
-    // Extract txHash from the first action node's result.
-    const actionNode = execution.nodeStatuses?.find(
-      (n) => n.status === "success" && n.result?.transactionHash
-    );
-    const txHash = actionNode?.result?.transactionHash ?? "";
-    const success = execution.status === "success";
-
-    if (!success) {
+    if (execution.status !== "success") {
       const reason = execution.errorContext?.error ?? "unknown error";
+      const isNonceLock = reason.includes("nonce lock");
       throw new Error(
-        `[KeeperHub] Workflow ${workflowId} execution ${executionId} failed: ${reason}`
+        `[KeeperHub] Workflow ${workflowId} execution ${executionId} failed${isNonceLock ? " (nonce lock — avoid concurrent executions on the same wallet)" : ""}: ${reason}`
       );
     }
 
+    // /status doesn't include the tx hash — fetch it from the full execution record.
+    const txHash = await this.fetchExecutionTxHash(executionId);
+
     return { executionId, txHash, success: true, executedAt: Date.now() };
+  }
+
+  /** Fetch the transaction hash from the execution logs endpoint after success. */
+  private async fetchExecutionTxHash(executionId: string): Promise<string> {
+    if (executionId.startsWith("stub-")) return "";
+    try {
+      const res = await fetch(
+        `${this.baseUrl}/api/workflows/executions/${executionId}/logs`,
+        { headers: this.authHeaders() }
+      );
+      if (!res.ok) return "";
+      const data = (await res.json()) as {
+        execution?: { output?: { transactionHash?: string } };
+        logs?: Array<{ output?: { transactionHash?: string } }>;
+      };
+      return (
+        data.execution?.output?.transactionHash ??
+        data.logs?.find((l) => l.output?.transactionHash)?.output?.transactionHash ??
+        ""
+      );
+    } catch {
+      return "";
+    }
   }
 
   private authHeaders(): Record<string, string> {

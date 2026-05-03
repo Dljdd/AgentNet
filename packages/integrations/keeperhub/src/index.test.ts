@@ -113,16 +113,8 @@ describe("KeeperHubClient", () => {
     it("calls workflow and returns KeeperReceipt with txHash", async () => {
       fetchSpy = mockFetch([
         { ok: true, json: { executionId: "exec-42" } },
-        {
-          ok: true,
-          json: {
-            status: "success",
-            nodeStatuses: [
-              { nodeId: "trigger", status: "success" },
-              { nodeId: "update-score", status: "success", result: { success: true, transactionHash: "0xdeadbeef" } },
-            ],
-          },
-        },
+        { ok: true, json: { status: "success", nodeStatuses: [{ nodeId: "trigger", status: "success" }, { nodeId: "update-score", status: "success" }] } },
+        { ok: true, json: { execution: { output: { transactionHash: "0xdeadbeef" } } } }, // fetchExecutionTxHash
       ]);
       vi.stubGlobal("fetch", fetchSpy);
 
@@ -163,9 +155,14 @@ describe("KeeperHubSettlement", () => {
       status: "success",
       nodeStatuses: [
         { nodeId: "trigger", status: "success" },
-        { nodeId: "action", status: "success", result: { success: true, transactionHash: "0xcafe" } },
+        { nodeId: "action", status: "success" },
       ],
     },
+  };
+
+  const txHashResponse = {
+    ok: true,
+    json: { execution: { output: { transactionHash: "0xcafe" } } },
   };
 
   beforeEach(() => {
@@ -180,6 +177,7 @@ describe("KeeperHubSettlement", () => {
     fetchSpy = mockFetch([
       { ok: true, json: { executionId: "exec-ok" } },
       successResponse,
+      txHashResponse, // fetchExecutionTxHash
     ]);
     vi.stubGlobal("fetch", fetchSpy);
   });
@@ -295,7 +293,7 @@ describe("KeeperHubSettlement", () => {
 
 describe("WORKFLOW_IDS", () => {
   it("has the provisioned KeeperHub workflow IDs as defaults", () => {
-    expect(WORKFLOW_IDS.reputationUpdate).toBe("lza9g0c0dviu5mu0we7j2");
+    expect(WORKFLOW_IDS.reputationUpdate).toBe("gtpk3bflrnoihktuoa8ci");
     expect(WORKFLOW_IDS.paymentSettle).toBe("qpkwci7tw0dr3dlnjv0d6");
   });
 });
