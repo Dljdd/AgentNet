@@ -94,8 +94,8 @@ describe("getConfig()", () => {
 });
 
 describe("ZG_TESTNET", () => {
-  it("has chainId 16600", () => {
-    expect(ZG_TESTNET.chainId).toBe(16600);
+  it("has chainId 16602", () => {
+    expect(ZG_TESTNET.chainId).toBe(16602);
   });
 
   it("has a non-empty rpcUrl", () => {

@@ -338,6 +338,12 @@ export default function WorkerDetailPage({ params }: WorkerDetailPageProps) {
           <ActivityFeedForAddress address={address} />
         </div>
 
+        {/* ── Task Results (0G Storage) ─────────────────────── */}
+        <div>
+          <div className="eyebrow mb-3">Task Results · 0G Storage</div>
+          <TaskResultsForWorker address={address} />
+        </div>
+
       </div>
     </div>
   )
@@ -462,6 +468,158 @@ function ActivityFeedForAddress({ address }: { address: string }) {
             </span>
           </div>
         ))}
+      </div>
+    </div>
+  )
+}
+
+/* ── Task results stored via 0G Storage layer ────────── */
+function TaskResultsForWorker({ address }: { address: string }) {
+  interface StoredTask {
+    taskId: string
+    taskType: string
+    workerAddress: string
+    callerAddress: string | null
+    result: unknown
+    completedAt: number
+    computeUsed: boolean
+  }
+
+  const namespaces = ['wallet-summaries', 'token-checks', 'pool-index']
+
+  const { data: allResults, isLoading } = useSWR<StoredTask[]>(
+    `/api/storage?namespace=wallet-summaries&prefix=${address}`,
+    async () => {
+      const fetches = namespaces.map((ns) =>
+        fetch(`/api/storage?namespace=${ns}&prefix=${address}`).then((r) => r.json())
+      )
+      const results = await Promise.all(fetches)
+      return (results.flat() as StoredTask[]).sort((a, b) => b.completedAt - a.completedAt)
+    },
+    { refreshInterval: 8000 }
+  )
+
+  const cardStyle = {
+    background: '#000000',
+    borderColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 'var(--r-lg)',
+    boxShadow: '0 0 0 1px rgba(45,201,100,0.06) inset',
+  }
+
+  const taskColors: Record<string, string> = {
+    'wallet-summarizer':  '#8169D8',
+    'token-fact-checker': '#F5B041',
+    'pool-indexer':       '#2DC964',
+  }
+
+  function localTimeAgo(ts: number) {
+    const s = Math.floor((Date.now() - ts) / 1000)
+    if (s < 60) return `${s}s ago`
+    if (s < 3600) return `${Math.floor(s / 60)}m ago`
+    return `${Math.floor(s / 3600)}h ago`
+  }
+
+  function resultSummary(task: StoredTask): string {
+    const r = task.result as Record<string, unknown>
+    if (task.taskType === 'wallet-summarizer') return r.summary as string
+    if (task.taskType === 'token-fact-checker')
+      return `${r.symbol} — verdict: ${r.verdict} (${r.confidence}% confidence)`
+    if (task.taskType === 'pool-indexer')
+      return `${(r.token0 as { symbol: string }).symbol}/${(r.token1 as { symbol: string }).symbol} @ ${r.currentPrice}`
+    return JSON.stringify(task.result).slice(0, 80)
+  }
+
+  if (isLoading) {
+    return (
+      <div className="border p-4 space-y-3 animate-pulse" style={cardStyle}>
+        {[1, 2].map((i) => (
+          <div key={i} className="flex gap-3">
+            <div className="w-2 h-2 rounded-full mt-1.5" style={{ background: 'rgba(255,255,255,0.08)' }} />
+            <div className="flex-1">
+              <div className="h-2.5 rounded w-1/3 mb-2" style={{ background: 'rgba(255,255,255,0.08)' }} />
+              <div className="h-2 rounded w-full" style={{ background: 'rgba(255,255,255,0.05)' }} />
+            </div>
+          </div>
+        ))}
+      </div>
+    )
+  }
+
+  if (!allResults || allResults.length === 0) {
+    return (
+      <div
+        className="border p-6 text-center font-sans text-sm"
+        style={{ ...cardStyle, color: 'var(--text-subtle)' }}
+      >
+        No task results stored yet. Submit a task to this worker to see results here.
+      </div>
+    )
+  }
+
+  return (
+    <div className="border overflow-hidden" style={cardStyle}>
+      <div className="max-h-80 overflow-y-auto divide-y" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+        {allResults.map((task) => {
+          const color = taskColors[task.taskType] ?? 'var(--text-subtle)'
+          return (
+            <div
+              key={task.taskId}
+              className="py-3 px-4 flex items-start gap-3 transition-colors"
+              onMouseEnter={(e) => {
+                ;(e.currentTarget as HTMLElement).style.background =
+                  'color-mix(in oklab, var(--accent) 4%, transparent)'
+              }}
+              onMouseLeave={(e) => {
+                ;(e.currentTarget as HTMLElement).style.background = 'transparent'
+              }}
+            >
+              <span
+                className="w-2 h-2 rounded-full flex-shrink-0 mt-1.5"
+                style={{ background: color }}
+              />
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-0.5">
+                  <span
+                    className="font-mono text-[9px] uppercase tracking-[0.08em]"
+                    style={{ color }}
+                  >
+                    {task.taskType}
+                  </span>
+                  {task.computeUsed && (
+                    <span
+                      className="font-mono text-[8px] px-1.5 py-px rounded-full border"
+                      style={{
+                        color: '#2DC964',
+                        borderColor: 'rgba(45,201,100,0.3)',
+                        background: 'rgba(45,201,100,0.08)',
+                      }}
+                    >
+                      0G Compute
+                    </span>
+                  )}
+                </div>
+                <p
+                  className="font-sans text-xs leading-snug line-clamp-2"
+                  style={{ color: 'var(--text-muted)' }}
+                >
+                  {resultSummary(task)}
+                </p>
+                <span
+                  className="font-mono text-[9px] mt-0.5 block"
+                  style={{ color: 'var(--text-subtle)' }}
+                >
+                  {task.taskId}
+                </span>
+              </div>
+              <span
+                className="font-mono text-[10px] flex-shrink-0 mt-0.5"
+                style={{ color: 'var(--text-subtle)' }}
+              >
+                {localTimeAgo(task.completedAt)}
+              </span>
+            </div>
+          )
+        })}
       </div>
     </div>
   )

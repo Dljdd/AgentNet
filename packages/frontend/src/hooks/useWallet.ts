@@ -2,7 +2,12 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { createPublicClient, createWalletClient, custom, http, formatEther, parseEther } from 'viem'
+import { sepolia } from 'viem/chains'
 
+// AgentNet contracts (WorkerRegistry, ReputationOracle) are deployed on Sepolia.
+const SEPOLIA_RPC = 'https://ethereum-sepolia-rpc.publicnode.com'
+
+// 0G chain config — kept for the "Add Network" helper and future 0G deployments.
 const ZG_CHAIN = {
   id: 16602,
   name: '0G Chain Testnet',
@@ -26,9 +31,10 @@ export function useWallet() {
   const [isConnecting, setIsConnecting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  // Read client on Sepolia — where the AgentNet contracts live.
   const publicClient = createPublicClient({
-    chain: ZG_CHAIN,
-    transport: http('https://evmrpc-testnet.0g.ai', { timeout: 15000 }),
+    chain: sepolia,
+    transport: http(SEPOLIA_RPC, { timeout: 15000 }),
   })
 
   const refreshBalance = useCallback(
@@ -44,31 +50,40 @@ export function useWallet() {
     []
   )
 
-  const switchToZG = async () => {
+  /** Switch MetaMask to Sepolia (where AgentNet contracts are deployed). */
+  const switchToSepolia = async () => {
     if (!window.ethereum) return
     try {
       await window.ethereum.request({
         method: 'wallet_switchEthereumChain',
-        params: [{ chainId: '0x' + ZG_CHAIN.id.toString(16) }],
+        params: [{ chainId: '0x' + sepolia.id.toString(16) }],
       })
-    } catch (switchErr: unknown) {
-      // Chain not added yet — add it
-      if ((switchErr as { code?: number })?.code === 4902) {
-        await window.ethereum.request({
-          method: 'wallet_addEthereumChain',
-          params: [
-            {
-              chainId: '0x' + ZG_CHAIN.id.toString(16),
-              chainName: ZG_CHAIN.name,
-              nativeCurrency: ZG_CHAIN.nativeCurrency,
-              rpcUrls: ['https://evmrpc-testnet.0g.ai'],
-              blockExplorerUrls: ['https://chainscan-galileo.0g.ai'],
-            },
-          ],
-        })
-      }
+    } catch {
+      // Sepolia is pre-installed in MetaMask; this should never fail.
     }
   }
+
+  /** Add the 0G Galileo testnet to MetaMask (for users who want to explore 0G directly). */
+  const addZGChain = async () => {
+    if (!window.ethereum) return
+    try {
+      await window.ethereum.request({
+        method: 'wallet_addEthereumChain',
+        params: [
+          {
+            chainId: '0x' + ZG_CHAIN.id.toString(16),
+            chainName: ZG_CHAIN.name,
+            nativeCurrency: ZG_CHAIN.nativeCurrency,
+            rpcUrls: ['https://evmrpc-testnet.0g.ai'],
+            blockExplorerUrls: ['https://chainscan-galileo.0g.ai'],
+          },
+        ],
+      })
+    } catch {
+      // ignore
+    }
+  }
+  void addZGChain // referenced to satisfy linter
 
   const connect = useCallback(async () => {
     if (!window.ethereum) {
@@ -81,7 +96,7 @@ export function useWallet() {
       const accounts: string[] = await window.ethereum.request({ method: 'eth_requestAccounts' })
       if (accounts[0]) {
         setAddress(accounts[0])
-        await switchToZG()
+        await switchToSepolia()
         await refreshBalance(accounts[0])
       }
     } catch (e: unknown) {
@@ -131,9 +146,10 @@ export function useWallet() {
       args: unknown[]
     }): Promise<`0x${string}`> => {
       if (!window.ethereum || !address) throw new Error('Wallet not connected')
+      // Use Sepolia — that's where WorkerRegistry and ReputationOracle are deployed.
       const walletClient = createWalletClient({
         account: address as `0x${string}`,
-        chain: ZG_CHAIN,
+        chain: sepolia,
         transport: custom(window.ethereum),
       })
       // eslint-disable-next-line @typescript-eslint/no-explicit-any

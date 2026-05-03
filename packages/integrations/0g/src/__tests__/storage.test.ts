@@ -1,11 +1,36 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { ZGStorage } from "../storage.js";
 
+// Mock the 0G SDK so tests run offline and instantly.
+// ZGStorage's fallback path (in-memory Map) is exercised when SDK calls fail.
+vi.mock("@0glabs/0g-ts-sdk", () => ({
+  KvClient: vi.fn().mockImplementation(() => ({
+    getValue: vi.fn().mockRejectedValue(new Error("mock: offline")),
+    newIterator: vi.fn(),
+  })),
+  Indexer: vi.fn().mockImplementation(() => ({
+    selectNodes: vi.fn().mockRejectedValue(new Error("mock: offline")),
+  })),
+  Batcher: vi.fn(),
+  getFlowContract: vi.fn(),
+}));
+
+vi.mock("ethers", () => ({
+  ethers: {
+    JsonRpcProvider: vi.fn(),
+    Wallet: vi.fn().mockReturnValue({}),
+    id: (s: string) => `0xmock_${s}`,
+    encodeBase64: (b: Uint8Array) => Buffer.from(b).toString("base64"),
+  },
+}));
+
 vi.mock("@agentnet/config", () => ({
   getConfig: () => ({
     privateKey: "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80",
     zgRpcUrl: "http://localhost:8545",
     zgStorageEndpoint: "http://localhost:9000",
+    zgKvEndpoint: "http://localhost:6789",
+    zgFlowContract: "0x0000000000000000000000000000000000000001",
     zgComputeEndpoint: "http://localhost:9001",
     zgDAEndpoint: "http://localhost:9002",
     uniswapApiKey: "test-key",
@@ -19,8 +44,7 @@ describe("ZGStorage (in-memory fallback)", () => {
   let storage: ZGStorage;
 
   beforeEach(() => {
-    // Pass explicit args so getConfig() isn't called (but it's mocked anyway)
-    storage = new ZGStorage("http://localhost:9000", "0xprivkey");
+    storage = new ZGStorage();
   });
 
   describe("put()", () => {

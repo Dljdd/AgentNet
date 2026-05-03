@@ -46,7 +46,7 @@ export class WorkerAgent extends AgentBase {
 
     const cfg = getConfig();
     this.storageClient = new ZGStorage();
-    this.computeClient = new ZGCompute(cfg.zgComputeEndpoint, cfg.privateKey);
+    this.computeClient = new ZGCompute(cfg.zgComputeEndpoint, cfg.zgComputeApiKey || cfg.privateKey);
     this.daClient = new ZGDA();
     this.payWithAnyToken = new PayWithAnyToken(
       new UniswapSwapClient(cfg.uniswapApiKey, this.wallet)

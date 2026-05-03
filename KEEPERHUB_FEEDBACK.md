@@ -102,6 +102,16 @@ export class KeeperHubTx {
 
 ## What Could Be Better
 
+**🐛 Bug / Documentation Gap: No mention of 0G Chain support anywhere in the docs.**
+
+This was the most painful friction point we hit. AgentNet runs entirely on the 0G Chain Testnet (Chain ID 16602, RPC `https://evmrpc-testnet.0g.ai`). When we integrated KeeperHub, we could find zero documentation — not a single page, example, or changelog entry — confirming whether 0G Chain is a supported network. The supported networks list in the KeeperHub docs only covers mainnet EVM chains (Ethereum, Base, Arbitrum, Optimism) and a small set of testnets (Sepolia, Base Sepolia). 0G is not mentioned.
+
+This left us in a genuinely ambiguous state: is our integration broken, or is 0G just undocumented? We had to assume it worked and ship with that uncertainty. A simple addition to the network support matrix — even just "0G Chain: experimental / not yet supported / coming soon" — would have saved us hours of second-guessing. If it is not supported, we needed to know upfront so we could architect a fallback (e.g., bridging to a supported chain for keeper execution, or using a different guarantee mechanism for 0G-native transactions).
+
+**Actionable request:** Add a supported networks page with explicit chain IDs and RPC endpoints. Flag unsupported chains clearly so builders don't spend integration time on a path that won't work.
+
+---
+
 **No webhook / push notification for execution confirmation.** We currently poll `GET /transactions/{keeperId}` every 5 seconds to check status. A webhook on `executed` or `failed` events would let agents react instantly without polling overhead.
 
 **No TypeScript SDK.** We wrote our own typed wrapper around the REST API. An official `@keeperhub/sdk` package with TypeScript types, retry logic, and event emitters would reduce integration time significantly.

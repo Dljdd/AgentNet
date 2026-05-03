@@ -2,18 +2,11 @@
 
 import { useState, useEffect } from 'react'
 import { createPublicClient, http } from 'viem'
+import { sepolia } from 'viem/chains'
 
-const ZG_CHAIN = {
-  id: 16602,
-  name: '0G Chain Testnet',
-  nativeCurrency: { name: '0G', symbol: 'OG', decimals: 18 },
-  rpcUrls: {
-    default: { http: ['https://evmrpc-testnet.0g.ai'] },
-    public: { http: ['https://evmrpc-testnet.0g.ai'] },
-  },
-} as const
-
-const WORKER_REGISTRY = '0xde94A743D06143b08E4B49E3812D570065BEdC51' as `0x${string}`
+// WorkerRegistry is deployed on Sepolia — not 0G.
+const WORKER_REGISTRY = '0x31A664dA982495c9496C1626fE25cBFcE7Ab22a5' as `0x${string}`
+const SEPOLIA_RPC = 'https://ethereum-sepolia-rpc.publicnode.com'
 
 const REGISTRY_ABI = [
   {
@@ -108,8 +101,8 @@ export default function RegisterWorkerModal({
   const [errMsg, setErrMsg] = useState<string | null>(null)
 
   const publicClient = createPublicClient({
-    chain: ZG_CHAIN,
-    transport: http('https://evmrpc-testnet.0g.ai', { timeout: 15000 }),
+    chain: sepolia,
+    transport: http(SEPOLIA_RPC, { timeout: 15000 }),
   })
 
   useEffect(() => {
@@ -235,7 +228,7 @@ export default function RegisterWorkerModal({
               <p className="text-xs text-gray-500">Your wallet is now a worker on AgentNet.</p>
               {txHash && (
                 <a
-                  href={`https://chainscan-galileo.0g.ai/tx/${txHash}`}
+                  href={`https://sepolia.etherscan.io/tx/${txHash}`}
                   target="_blank"
                   rel="noreferrer"
                   className="text-xs text-blue-400 hover:underline block"
@@ -291,7 +284,7 @@ export default function RegisterWorkerModal({
                 <div className="flex items-center gap-2 text-yellow-400 text-xs">
                   <div className="w-3 h-3 rounded-full border border-yellow-400 border-t-transparent animate-spin" />
                   <span>Transaction pending…</span>
-                  <a href={`https://chainscan-galileo.0g.ai/tx/${txHash}`} target="_blank" rel="noreferrer" className="text-blue-400 hover:underline ml-auto">
+                  <a href={`https://sepolia.etherscan.io/tx/${txHash}`} target="_blank" rel="noreferrer" className="text-blue-400 hover:underline ml-auto">
                     View tx
                   </a>
                 </div>

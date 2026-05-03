@@ -15,6 +15,9 @@ interface TaskRecord {
   executionMs: number
   completedAt: number
   callerAddress: string | null
+  computeUsed?: boolean
+  storageNamespace?: string
+  storageKey?: string
 }
 
 interface TaskPanelProps {
@@ -355,6 +358,24 @@ export default function TaskPanel({ open, onClose, walletAddress, onTaskComplete
                   <span className="text-xs text-yellow-400">Score {result.workerScore.toLocaleString()}</span>
                 </div>
                 <div className="text-[10px] text-gray-600 mt-1">Fee: {result.workerFee} wei</div>
+              </div>
+
+              {/* 0G infrastructure badges */}
+              <div className="flex flex-wrap gap-2">
+                {result.computeUsed && (
+                  <div className="flex-1 bg-[#0a1a0f] border border-green-500/20 rounded-xl p-2.5">
+                    <p className="text-[9px] text-green-500/60 uppercase tracking-wider mb-1">0G Compute</p>
+                    <p className="text-[10px] text-green-400">AI inference via 0G Router</p>
+                    <p className="text-[9px] text-gray-600 mt-0.5">qwen/qwen-2.5-7b-instruct</p>
+                  </div>
+                )}
+                {result.storageKey && (
+                  <div className="flex-1 bg-[#0d0d1a] border border-purple-500/20 rounded-xl p-2.5">
+                    <p className="text-[9px] text-purple-400/60 uppercase tracking-wider mb-1">0G Storage</p>
+                    <p className="text-[10px] text-purple-300 font-mono truncate">{result.storageNamespace}</p>
+                    <p className="text-[9px] text-gray-600 mt-0.5 font-mono truncate">{result.storageKey}</p>
+                  </div>
+                )}
               </div>
 
               {/* Result display */}

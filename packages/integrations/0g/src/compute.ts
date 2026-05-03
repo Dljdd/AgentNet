@@ -1,4 +1,15 @@
-const DEFAULT_MODEL = "meta-llama/Meta-Llama-3.1-8B-Instruct";
+// 0G Compute — OpenAI-compatible inference via the 0G Router.
+//
+// Endpoint : https://router-api.0g.ai/v1  (set via ZG_COMPUTE_ENDPOINT)
+// API key  : obtained from https://pc.0g.ai after depositing 0G tokens
+//            (set via ZG_COMPUTE_API_KEY — separate from your ETH private key)
+//
+// The router is OpenAI-compatible: POST /v1/chat/completions with
+// Authorization: Bearer <api-key>.  Model names are provider-prefixed, e.g.
+// "meta-llama/Meta-Llama-3.1-8B-Instruct".  Check pc.0g.ai for live models.
+
+// Available models on 0G router — check https://router-api.0g.ai/v1/models for current list.
+const DEFAULT_MODEL = "qwen/qwen-2.5-7b-instruct";
 const DEFAULT_MAX_TOKENS = 1024;
 const DEFAULT_TEMPERATURE = 0.1;
 
@@ -21,11 +32,13 @@ interface FactCheckResult {
 
 export class ZGCompute {
   private readonly endpoint: string;
-  private readonly privateKey: string;
+  // API key from pc.0g.ai — used as the Bearer token for the router.
+  private readonly apiKey: string;
 
-  constructor(endpoint: string, privateKey: string) {
-    this.endpoint = endpoint;
-    this.privateKey = privateKey;
+  constructor(endpoint: string, apiKey: string) {
+    // Normalise: strip trailing slash so paths like /v1/chat/completions work.
+    this.endpoint = endpoint.replace(/\/$/, "");
+    this.apiKey = apiKey;
   }
 
   async inference(prompt: string, options?: InferenceOptions): Promise<string> {
@@ -33,11 +46,12 @@ export class ZGCompute {
     const maxTokens = options?.maxTokens ?? DEFAULT_MAX_TOKENS;
     const temperature = options?.temperature ?? DEFAULT_TEMPERATURE;
 
-    const response = await fetch(`${this.endpoint}/v1/chat/completions`, {
+    // Endpoint already includes the version prefix (e.g. /v1), so just append the path.
+    const response = await fetch(`${this.endpoint}/chat/completions`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${this.privateKey}`,
+        Authorization: `Bearer ${this.apiKey}`,
       },
       body: JSON.stringify({
         model,

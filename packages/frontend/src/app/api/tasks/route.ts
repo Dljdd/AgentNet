@@ -5,6 +5,7 @@ import { mainnet } from 'viem/chains'
 import { readFileSync, existsSync } from 'fs'
 import { join } from 'path'
 import { nanoid } from 'nanoid'
+import { saveTask } from '@/lib/task-store'
 
 type TaskType = 'pool-indexer' | 'wallet-summarizer' | 'token-fact-checker'
 
@@ -33,6 +34,68 @@ function pickBestWorker(workers: SeedWorker[], capability: TaskType): SeedWorker
   return eligible.reduce((best, w) => (w.composite > best.composite ? w : best))
 }
 
+// ---------------------------------------------------------------------------
+// 0G Compute — OpenAI-compatible inference via the 0G Router.
+// Falls back gracefully if the endpoint or API key is not configured.
+// ---------------------------------------------------------------------------
+
+const ZG_COMPUTE_ENDPOINT =
+  process.env.ZG_COMPUTE_ENDPOINT ?? 'https://router-api.0g.ai/v1'
+const ZG_COMPUTE_API_KEY = process.env.ZG_COMPUTE_API_KEY ?? ''
+const ZG_COMPUTE_MODEL = 'qwen/qwen-2.5-7b-instruct'
+
+async function zgInference(prompt: string, maxTokens = 512): Promise<string | null> {
+  if (!ZG_COMPUTE_API_KEY) return null
+  try {
+    const res = await fetch(`${ZG_COMPUTE_ENDPOINT}/chat/completions`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${ZG_COMPUTE_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: ZG_COMPUTE_MODEL,
+        messages: [{ role: 'user', content: prompt }],
+        max_tokens: maxTokens,
+        temperature: 0.1,
+      }),
+      signal: AbortSignal.timeout(15_000),
+    })
+    if (!res.ok) return null
+    const data = (await res.json()) as { choices: Array<{ message: { content: string } }> }
+    return data.choices[0]?.message?.content ?? null
+  } catch {
+    return null
+  }
+}
+
+async function zgSummarize(data: string, instructions: string): Promise<string | null> {
+  return zgInference(`${instructions}\n\nData:\n${data}`)
+}
+
+async function zgFactCheck(
+  claim: string,
+  evidence: string
+): Promise<{ verdict: string; confidence: number; reasoning: string } | null> {
+  const prompt =
+    `You are a fact-checking assistant. Evaluate the following claim against the provided evidence. ` +
+    `Respond with a JSON object only: { "verdict": "true" | "false" | "unverifiable", "confidence": <0-100>, "reasoning": <string> }. ` +
+    `Claim: ${claim}. Evidence: ${evidence}`
+  const raw = await zgInference(prompt, 256)
+  if (!raw) return null
+  try {
+    const match = raw.match(/\{[\s\S]*\}/)
+    if (!match) return null
+    return JSON.parse(match[0]) as { verdict: string; confidence: number; reasoning: string }
+  } catch {
+    return null
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Ethereum client for on-chain data collection
+// ---------------------------------------------------------------------------
+
 const ethClient = createPublicClient({
   chain: mainnet,
   transport: http('https://ethereum-rpc.publicnode.com', { timeout: 8000 }),
@@ -52,10 +115,14 @@ const ERC20_ABI = parseAbi([
   'function symbol() external view returns (string)',
 ])
 
+// ---------------------------------------------------------------------------
+// Task execution
+// ---------------------------------------------------------------------------
+
 async function executeTask(
   taskType: TaskType,
   params: Record<string, string>
-): Promise<{ result: unknown; executionMs: number }> {
+): Promise<{ result: unknown; executionMs: number; computeUsed: boolean }> {
   const start = Date.now()
 
   if (taskType === 'pool-indexer') {
@@ -68,9 +135,6 @@ async function executeTask(
       ethClient.getBlockNumber(),
     ])
 
-    // Derive price from sqrtPriceX96: price = (sqrtPriceX96 / 2^96)^2
-    // For WETH/USDC pool: token0=WETH (18 dec), token1=USDC (6 dec)
-    // Adjusted price = raw_price * 10^(dec0-dec1) = raw_price * 10^12
     const sqrtPriceX96 = slot0[0]
     const rawPrice = Number(sqrtPriceX96) / 2 ** 96
     const ethUsdcPrice = 1 / (rawPrice * rawPrice * 1e12)
@@ -88,7 +152,7 @@ async function executeTask(
       blockStart: Number(blockNumber) - blockRange,
       fee: '0.05%',
     }
-    return { result, executionMs: Date.now() - start }
+    return { result, executionMs: Date.now() - start, computeUsed: false }
   }
 
   if (taskType === 'wallet-summarizer') {
@@ -100,17 +164,28 @@ async function executeTask(
     ])
 
     const ethBalance = Number(balance) / 1e18
+    const onChainData = `wallet=${walletAddress}, txCount=${txCount}, ethBalance=${ethBalance.toFixed(4)} ETH`
+
+    // Attempt 0G Compute summarization; fall back to deterministic summary if unavailable.
+    const aiSummary = await zgSummarize(
+      onChainData,
+      'Summarize this Ethereum wallet activity in 2-3 sentences for a DeFi user. Be concise and insightful.'
+    )
+
+    const summary =
+      aiSummary ??
+      `Wallet has sent ${txCount.toLocaleString()} transactions on Ethereum mainnet. Current balance: ${ethBalance.toFixed(4)} ETH. Activity pattern indicates DeFi-native wallet with Uniswap v3, Aave, and ERC-20 transfers.`
 
     const result = {
       walletAddress,
-      summary: `Wallet has sent ${txCount.toLocaleString()} transactions on Ethereum mainnet. Current balance: ${ethBalance.toFixed(4)} ETH. Activity pattern indicates DeFi-native wallet with Uniswap v3, Aave, and ERC-20 transfers.`,
+      summary,
       stats: {
         txCount,
         ethBalance: `${ethBalance.toFixed(4)} ETH`,
         mostActiveProtocol: 'Uniswap v3',
       },
     }
-    return { result, executionMs: Date.now() - start }
+    return { result, executionMs: Date.now() - start, computeUsed: !!aiSummary }
   }
 
   if (taskType === 'token-fact-checker') {
@@ -129,29 +204,44 @@ async function executeTask(
     const sym = symbol.status === 'fulfilled' ? symbol.value : tokenAddress.slice(0, 8)
 
     const humanSupply = Number(supply) / 10 ** dec
-    // Deterministic verdict: large well-known supply = legit
-    const verdict = !hasCode ? 'unverified' : humanSupply > 1_000_000 ? 'legit' : 'suspicious'
+    const evidence = `token=${tokenAddress}, symbol=${sym}, contractDeployed=${hasCode}, totalSupply=${humanSupply.toLocaleString()}, decimals=${dec}`
+    const claim = `The token ${sym} at ${tokenAddress} is a legitimate ERC-20 token.`
+
+    // Attempt 0G Compute fact-check; fall back to deterministic verdict.
+    const aiCheck = await zgFactCheck(claim, evidence)
+
+    const verdict = aiCheck?.verdict === 'true'
+      ? 'legit'
+      : aiCheck?.verdict === 'false'
+      ? 'suspicious'
+      : aiCheck
+      ? 'unknown'
+      : (!hasCode ? 'unverified' : humanSupply > 1_000_000 ? 'legit' : 'suspicious')
+
+    const confidence = aiCheck?.confidence ?? (hasCode ? 92 : 45)
+    const reasoning =
+      aiCheck?.reasoning ??
+      (verdict === 'legit'
+        ? `${sym} contract is deployed with standard ERC-20 mechanics and a healthy total supply of ${humanSupply.toLocaleString()} tokens.`
+        : verdict === 'suspicious'
+        ? `${sym} has a low total supply (${humanSupply.toLocaleString()}). Exercise caution.`
+        : 'No contract code found at this address.')
 
     const result = {
       tokenAddress,
       symbol: sym,
       verdict,
-      confidence: hasCode ? 92 : 45,
+      confidence,
       totalSupply: humanSupply.toLocaleString(),
       decimals: dec,
-      reasoning:
-        verdict === 'legit'
-          ? `${sym} contract is deployed with standard ERC-20 mechanics and a healthy total supply of ${humanSupply.toLocaleString()} tokens.`
-          : verdict === 'suspicious'
-          ? `${sym} has a low total supply (${humanSupply.toLocaleString()}). Exercise caution.`
-          : 'No contract code found at this address.',
+      reasoning,
       checks: {
         contractDeployed: hasCode,
         totalSupply: humanSupply.toLocaleString(),
         hasVerifiedSource: verdict === 'legit',
       },
     }
-    return { result, executionMs: Date.now() - start }
+    return { result, executionMs: Date.now() - start, computeUsed: !!aiCheck }
   }
 
   throw new Error(`Unknown task type: ${taskType}`)
@@ -183,7 +273,25 @@ export async function POST(request: NextRequest): Promise<Response> {
   const taskId = nanoid()
 
   try {
-    const { result, executionMs } = await executeTask(taskType, params)
+    const { result, executionMs, computeUsed } = await executeTask(taskType, params)
+
+    // Persist to in-process store (mirrors 0G Storage namespace pattern).
+    // Key: workerAddress/taskId — matches the namespace used by the actual worker agents.
+    const namespace = taskType === 'pool-indexer'
+      ? 'pool-index'
+      : taskType === 'wallet-summarizer'
+      ? 'wallet-summaries'
+      : 'token-checks'
+
+    saveTask(namespace, `${worker.address}/${taskId}`, {
+      taskId,
+      taskType,
+      workerAddress: worker.address,
+      callerAddress: callerAddress ?? null,
+      result,
+      completedAt: Date.now(),
+      computeUsed,
+    })
 
     return Response.json(
       {
@@ -196,6 +304,9 @@ export async function POST(request: NextRequest): Promise<Response> {
         result,
         executionMs,
         completedAt: Date.now(),
+        computeUsed,
+        storageNamespace: namespace,
+        storageKey: `${worker.address}/${taskId}`,
       },
       { headers }
     )
